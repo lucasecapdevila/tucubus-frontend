@@ -1,6 +1,7 @@
 import { faGithub, faLinkedin, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -11,24 +12,24 @@ const Footer = () => {
         </div>
         <ul className="flex flex-row items-center gap-3 lg:gap-6 mt-2 lg:mt-0">
           <li>
-            <a href="https://github.com/tuusuario" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="GitHub">
+            <Link to="https://github.com/lucasecapdevila" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="GitHub">
               <FontAwesomeIcon icon={faGithub} size="lg" />
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="mailto:tucorreo@ejemplo.com" className="hover:text-gray-600" title="Email">
+            <Link to="mailto:lcapdevila60@gmail.com" className="hover:text-gray-600" title="Email">
               <FontAwesomeIcon icon={faEnvelope} size="lg" />
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="https://linkedin.com/in/tuusuario" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="LinkedIn">
+            <Link to="https://www.linkedin.com/in/lucasecapdevila/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="LinkedIn">
               <FontAwesomeIcon icon={faLinkedin} size="lg" />
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="https://wa.me/5491123456789" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="Whatsapp">
+            <Link to="https://wa.me/5493865244215" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600" title="Whatsapp">
               <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
