@@ -1,7 +1,6 @@
-import Sidebar from "./components/common/Sidebar"
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./components/pages/Home";
-import Footer from "./components/common/Footer";
+import { Contact, Help, Home, Login } from "./components/pages";
+import { Footer, Sidebar } from "./components/common";
 
 function App() {
 
@@ -10,6 +9,9 @@ function App() {
       <Sidebar />
       <Routes>
         <Route exact path="/" element={<Home />} />
+        <Route exact path="/ayuda" element={<Help />} />
+        <Route exact path="/contacto" element={<Contact />} />
+        <Route exact path="/login" element={<Login />} />
       </Routes>
       <Footer />
     </BrowserRouter>
