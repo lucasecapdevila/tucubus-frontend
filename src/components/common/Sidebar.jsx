@@ -23,7 +23,7 @@ const Sidebar = () => {
       {/* Botón burger hamburguesa solo en mobile */}
       {!open && (
         <button
-          className="fixed top-4 left-4 z-50 bg-white/90 border border-gray-200 rounded-md shadow-md p-2 md:hidden"
+          className="fixed top-4 left-4 z-50 bg-white/90 border border-gray-200 rounded-md shadow-md p-2 lg:hidden"
           aria-label="Abrir menú"
           onClick={() => setOpen(true)}
         >
@@ -32,7 +32,7 @@ const Sidebar = () => {
       )}
 
       {/* Overlay + Drawer sidebar mobile */}
-      <div className={`fixed inset-0 z-40 flex md:hidden pointer-events-none${open ? "" : " invisible"}`}>
+      <div className={`fixed inset-0 z-40 flex lg:hidden pointer-events-none${open ? "" : " invisible"}`}>
         {/* Overlay */}
         <div
           className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ease-in-out pointer-events-auto${open ? " opacity-100" : " opacity-0"}`}
@@ -49,7 +49,7 @@ const Sidebar = () => {
             <button
               aria-label="Cerrar menú"
               onClick={() => setOpen(false)}
-              className="p-2 rounded-md hover:bg-gray-100 md:hidden"
+              className="p-2 rounded-md hover:bg-gray-100 lg:hidden"
             >
               <FontAwesomeIcon icon={faXmark} size="lg" />
             </button>
@@ -76,7 +76,7 @@ const Sidebar = () => {
       </div>
 
       {/* Sidebar fija desktop */}
-      <div className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:w-64 md:h-screen bg-white border-r border-gray-200 shadow-sm z-30">
+      <div className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:w-64 lg:h-screen bg-white border-r border-gray-200 shadow-sm z-30">
         <div className="flex justify-center py-6">
           <img src={logo} alt="Logo" className="w-40 h-auto" />
         </div>
