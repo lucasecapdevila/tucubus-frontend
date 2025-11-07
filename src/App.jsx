@@ -7,7 +7,7 @@ function App() {
   return (
     <BrowserRouter>
       <Sidebar />
-      <div className="mx-auto pl-64">
+      <div className="mx-auto lg:pl-64">
         <Routes>
           <Route exact path="/" element={<Home />} />
           <Route exact path="/ayuda" element={<Help />} />
