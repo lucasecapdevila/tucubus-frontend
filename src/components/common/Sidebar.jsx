@@ -56,16 +56,16 @@ const Sidebar = () => {
       )}
 
       {/* Overlay + Drawer sidebar mobile */}
-      <div className={`fixed inset-0 z-40 flex lg:hidden pointer-events-none${open ? "" : "invisible"}`}>
+      <div className={`fixed inset-0 flex lg:hidden ${open ? 'z-40 pointer-events-auto' : 'z-0 pointer-events-none invisible'}`}>
         {/* Overlay */}
         <div
-          className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ease-in-out pointer-events-auto${open ? " opacity-100" : " opacity-0"}`}
+          className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ease-in-out ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
           aria-hidden="true"
           onClick={() => setOpen(false)}
         />
         {/* Panel deslizante */}
         <div
-          className={`relative h-full w-64 bg-white shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out pointer-events-auto ${open ? "translate-x-0" : "-translate-x-full"}`}
+          className={`relative h-full w-64 bg-white shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'}`}
         >
           {/* Header con logo y botón cerrar (Xmark oculto en desktop) */}
           <div className="flex items-center justify-between px-4 py-6">
