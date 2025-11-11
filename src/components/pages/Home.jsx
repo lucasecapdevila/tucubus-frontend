@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useCrud } from "../../hooks/useCrud";
 
 const cities = [
   "Buenos Aires",
@@ -19,6 +20,25 @@ const Home = () => {
   const [option, setOption] = useState("");
   const [searchDone, setSearchDone] = useState(false);
   const [time, setTime] = useState("");
+
+  // Métodos CRUD
+  const { getAll } = useCrud('lineas')
+
+  useEffect(() => {
+    mostrarLineas();
+  }, []);
+
+  const mostrarLineas = async() => {
+    try{
+      const lineas = await getAll()
+      console.log(lineas);
+      
+    } 
+    catch(error){
+      console.log(error)
+    }
+  }
+  
 
   const {
     register,
