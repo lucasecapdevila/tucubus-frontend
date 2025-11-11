@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { getLineas } from "../../services/lineas";
 
 const cities = [
   "Buenos Aires",
@@ -19,6 +20,22 @@ const Home = () => {
   const [option, setOption] = useState("");
   const [searchDone, setSearchDone] = useState(false);
   const [time, setTime] = useState("");
+
+  useEffect(() => {
+    mostrarLineas();
+  }, []);
+
+  const mostrarLineas = async() => {
+    try{
+      const lineas = await getLineas()
+      console.log(lineas);
+      
+    } 
+    catch(error){
+      console.log(error)
+    }
+  }
+  
 
   const {
     register,
