@@ -3,12 +3,21 @@ import { Menu } from "antd";
 import logo from "../../assets/img/logo.webp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  
+  const navigate = useNavigate();
+  const [selectedKey, setSelectedKey] = useState("1");
+  const [user, setUser] = useState(null);
+
+  // Leer usuario al montar/cambiar
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("usuarioTucuBus");
+    setUser(storedUser ? JSON.parse(storedUser) : null);
+  }, [location]); // Dependencia location por si logueo en otra ruta
+
   // Mapeo de rutas a keys del menú
   const getSelectedKey = () => {
     switch (location.pathname) {
@@ -20,27 +29,55 @@ const Sidebar = () => {
         return '3';
       case '/login':
         return '4';
+      case '/admin':
+        return '5';
       default:
         return '1';
     }
   };
 
-  const [selectedKey, setSelectedKey] = useState(getSelectedKey());
-
-  // Actualizar selectedKey cuando cambie la ruta
   useEffect(() => {
     setSelectedKey(getSelectedKey(location.pathname));
   }, [location.pathname]);
 
-  // Menu items sin "Ingresar"
+  // Items principales - siempre aparecen
   const mainItems = [
     { key: '1', label: <NavLink to="/">Inicio</NavLink> },
     { key: '2', label: <NavLink to="/ayuda">Ayuda</NavLink> },
     { key: '3', label: <NavLink to="/contacto">Contacto</NavLink> },
-    { type: 'divider' },
   ];
-  // "Ingresar" va siempre abajo
-  const ingresarItem = [{ key: '4', label: <NavLink to="/login">Ingresar</NavLink> }];
+
+  // Admin extra - Solo si corresponde
+  let adminItem = [];
+  if (user?.role === "Administrador") {
+    adminItem = [
+      { key: '5', label: <NavLink to="/admin">Admin</NavLink> }
+    ];
+  }
+
+  // Último item - login o logout según estado
+  const handleLogout = () => {
+    sessionStorage.removeItem("usuarioTucuBus");
+    setUser(null);
+    navigate("/");
+    setOpen(false);
+  };
+
+  const loginLogoutItem = user ?
+    [{ key: '4', label: <span style={{cursor:'pointer'}} onClick={handleLogout}>Cerrar sesión</span> }] :
+    [{ key: '4', label: <NavLink to="/login">Ingresar</NavLink> }];
+
+  // Menú mobile y desktop lo usan igual, sólo cambia composición
+  const allMenuItems = [...mainItems, ...adminItem, { type: 'divider' }];
+
+  // Handler para Menu para cerrar Drawer (solo mobile)
+  const handleMenuClick = ({ key }) => {
+    setSelectedKey(key);
+    // Cerrar sólo si estamos en mobile/Drawer abierto
+    if (open) {
+      setOpen(false);
+    }
+  };
 
   return (
     <>
@@ -82,19 +119,19 @@ const Sidebar = () => {
           </div>
           <div className="flex-1 overflow-y-auto">
             <Menu
-              onClick={({key}) => setSelectedKey(key)}
+              onClick={handleMenuClick}
               selectedKeys={[selectedKey]}
               mode="inline"
-              items={[...mainItems]}
+              items={allMenuItems}
               className="border-0"
             />
           </div>
           <div className="pb-2 px-4">
             <Menu
-              onClick={({key}) => setSelectedKey(key)}
+              onClick={handleMenuClick}
               selectedKeys={[selectedKey]}
               mode="inline"
-              items={ingresarItem}
+              items={loginLogoutItem}
               className="border-0"
             />
           </div>
@@ -113,7 +150,7 @@ const Sidebar = () => {
             onClick={({key}) => setSelectedKey(key)}
             selectedKeys={[selectedKey]}
             mode="inline"
-            items={[...mainItems]}
+            items={allMenuItems}
             className="border-0"
           />
         </div>
@@ -122,7 +159,7 @@ const Sidebar = () => {
             onClick={({key}) => setSelectedKey(key)}
             selectedKeys={[selectedKey]}
             mode="inline"
-            items={ingresarItem}
+            items={loginLogoutItem}
             className="border-0"
           />
         </div>
