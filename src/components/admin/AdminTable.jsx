@@ -16,15 +16,12 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     setValue
   } = useForm()
 
-  // Flatten data antes de setearlo (puedes adaptarlo para cada endpoint)
   const flattenData = (arr) => {
     return arr.map(item => {
       const flat = { ...item }
-      // Casos típicos, puedes ampliarlo por endpoint
       if(item.linea && item.linea.nombre) flat.linea_nombre = item.linea.nombre
       if(item.recorrido && item.recorrido.origen && item.recorrido.destino)
-        flat.recorrido_label = `${item.recorrido.origen} – ${item.recorrido.destino}`
-      // Agrega más reglas aquí según tus modelos backend
+        flat.recorrido_label = `${item.recorrido.origen} — ${item.recorrido.destino}`
       return flat
     })
   }
@@ -34,7 +31,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       const result = await getAll()
       setData(flattenData(result))
     } catch (error) {
-      message.error(`Error al cargar ${title.toLowerCase()}: `, error)
+      message.error(`Error al cargar ${title.toLowerCase()}: ${error.message}`)
     }
   }
 
@@ -57,6 +54,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
 
   const onSubmit = async(values) => {
     try {
+      console.log('Valores a enviar:', values) // Debug
       if(editing){
         await update(editing.id, values)
         message.success(`${title} actualizado`)
@@ -68,7 +66,8 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       setOpen(false)
       reset()
     } catch (error) {
-      message.error('Error al guardar:', error)
+      message.error(`Error al guardar: ${error.response?.data?.detail || error.message}`)
+      console.error('Error completo:', error.response?.data)
     }
   }
 
@@ -78,7 +77,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       message.success(`${title} eliminado`)
       fetchData()
     } catch (error) {
-      message.error('Error al eliminar:', error)
+      message.error(`Error al eliminar: ${error.message}`)
     }
   }
 
@@ -105,7 +104,6 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     }
   ]
 
-  // Nuevo renderFormField para soportar tipos
   const renderFormField = (field, inputField) => {
     switch(field.type){
       case 'select':
@@ -140,7 +138,8 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
                 inputField.onChange(null)
               }
             }}
-            placeholder="Seleccione hora"
+            placeholder="Seleccione hora (HH:mm)"
+            showNow={false}
           />
         )
       default:
@@ -187,7 +186,6 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
                 control={control}
                 rules={field.rules}
                 render={({ field: inputField }) => renderFormField(field, inputField)}
-                {...(field.type === 'switch' ? { valuePropName: 'checked' } : {})}
               />
             </div>
           ))}
