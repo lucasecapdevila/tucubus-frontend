@@ -128,7 +128,7 @@ const Home = () => {
                 checked={day === "Domingo"}
                 onChange={() => setDay("Domingo")}
               />
-              <span className="block w-full text-center px-2 sm:px-6 py-1.5 rounded-r-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all hover:border-blue-400 hover:bg-blue-50 peer-checked:border-blue-500 peer-checked:bg-[#0c5392] peer-checked:text-white peer-checked:shadow-lg peer-checked:hover:bg-blue-600">
+              <span className="block w-full text-center px-2 sm:px-6 sm:pl-3 py-1.5 rounded-r-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all hover:border-blue-400 hover:bg-blue-50 peer-checked:border-blue-500 peer-checked:bg-[#0c5392] peer-checked:text-white peer-checked:shadow-lg peer-checked:hover:bg-blue-600">
                 Domingo
               </span>
             </label>

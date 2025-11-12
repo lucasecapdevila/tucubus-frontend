@@ -3,7 +3,7 @@ import { useCrud } from '../../hooks/useCrud'
 import { Controller, useForm } from 'react-hook-form'
 import { Button, Input, message, Modal, Popconfirm, Table } from 'antd'
 
-const AdminTable = ({ title, endpoint, columns, formFields }) => {
+const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint)
   const [data, setData] = useState([])
   const [open, setOpen] = useState(false)
@@ -72,6 +72,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     ...columns,
     {
       title: "Acciones",
+      align: "center",
       render: (_, record) => (
         <>
           <Button type='link' onClick={() => handleOpen(record)}>
@@ -92,19 +93,26 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <Button type="primary" onClick={() => handleOpen()}>
+      <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
+        <h2 className="text-lg sm:text-xl font-bold text-primary-text">{title}</h2>
+        <Button type="primary" onClick={() => handleOpen()} className="self-start sm:self-center w-fit">
           Nuevo {title}
         </Button>
       </div>
 
-      <Table
-        columns={tableColumns}
-        dataSource={data}
-        rowKey='id'
-        loading={loading}
-      />
+      <div className="overflow-x-auto rounded-lg bg-white shadow border border-gray-200 p-0 sm:p-2 w-full max-w-full">
+        <div className="min-w-[350px] w-full max-w-full">
+          <Table
+            columns={tableColumns}
+            dataSource={data}
+            rowKey='id'
+            loading={loading}
+            pagination={pagination}
+            size="large"
+            className="w-full max-w-full"
+          />
+        </div>
+      </div>
 
       <Modal
         title={editing ? `Editar ${title}` : `Nuevo ${title}`}
@@ -113,16 +121,16 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         onOk={handleSubmit(onSubmit)}
         destroyOnHidden
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           {formFields.map((field) => (
-            <div key={field.name} className='mb-3'>
-              <label className='block mb-1'>{field.label}</label>
+            <div key={field.name} className='mb-2'>
+              <label className='block mb-1 font-semibold text-primary-text'>{field.label}</label>
               <Controller 
                 name={field.name}
                 control={control}
                 rules={field.rules}
                 render={({ field: inputField }) => (
-                  <Input {...inputField} />
+                  <Input {...inputField} className="w-full"/>
                 )}
               />
             </div>
