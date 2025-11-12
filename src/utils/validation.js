@@ -102,3 +102,34 @@ export const validateUsername = (username) => {
 
   return { valid: true };
 };
+
+// Valida formato de hora HH:mm
+export const validateTimeFormat = (time) => {
+  if (!time) return { valid: false, message: "La hora es requerida" };
+
+  const timeRegex = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
+
+  if (!timeRegex.test(time)) {
+    return {
+      valid: false,
+      message: "Formato inválido. Use HH:mm (ej: 14:30)",
+    };
+  }
+
+  return { valid: true };
+};
+
+// Formatea duración en minutos a formato legible
+export const formatDuration = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours === 0) return `${mins} min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}min`;
+};
+
+// Detecta si un viaje cruza medianoche
+export const crossesMidnight = (horaSalida, horaLlegada) => {
+  return timeToMinutes(horaLlegada) < timeToMinutes(horaSalida);
+};
