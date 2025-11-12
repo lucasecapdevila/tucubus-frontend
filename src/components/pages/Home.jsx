@@ -22,7 +22,7 @@ const Home = () => {
   const [time, setTime] = useState("");
 
   // Métodos CRUD
-  const { getAll } = useCrud('lineas')
+  const { getAll } = useCrud('horarios')
 
   useEffect(() => {
     mostrarLineas();

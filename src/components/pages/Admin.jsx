@@ -1,8 +1,49 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AdminTable } from "../common";
 import { Tabs } from "antd";
+import { useCrud } from "../../hooks/useCrud";
+import { rolesOptions, tipoDiaOptions } from "../../utils/adminPanelOptions";
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 
 const Admin = () => {
+  const [lineasOptions, setLineasOptions] = useState([]);
+  const [recorridosOptions, setRecorridosOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { getAll: getAllLineas } = useCrud('lineas');
+  const { getAll: getAllRecorridos } = useCrud('recorridos');
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Cargar líneas
+        const lineas = await getAllLineas();
+        const lineasOpts = lineas.map(linea => ({
+          label: linea.nombre,
+          value: linea.id,
+        }));
+        setLineasOptions(lineasOpts);
+
+        // Cargar recorridos
+        const recorridos = await getAllRecorridos();
+        const recorridosOpts = recorridos.map(recorrido => ({
+          label: `${recorrido.origen} - ${recorrido.destino}`,
+          value: recorrido.id,
+        }));
+        setRecorridosOptions(recorridosOpts);
+        
+      } catch (error) {
+        console.error("Error al cargar opciones:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOptions();
+  }, []);
+
   const items = [
     {
       key: "lineas",
@@ -33,12 +74,12 @@ const Admin = () => {
             { title: "ID", dataIndex: "id" },
             { title: "Origen", dataIndex: "origen" },
             { title: "Destino", dataIndex: "destino" },
-            { title: "Linea", dataIndex: "linea_id" },
+            { title: "Linea", dataIndex: "linea_nombre", render: (val) => val || '-' },
           ]}
           formFields={[
             { name: "origen", label: "Origen", rules: { required: true } },
             { name: "destino", label: "Destino", rules: { required: true } },
-            { name: "linea_id", label: "Linea", rules: { required: true } },
+            { name: "linea_id", label: "Linea", type: "select", options: lineasOptions, rules: { required: true } },
           ]}
           pagination={false}
         />
@@ -56,15 +97,17 @@ const Admin = () => {
             { title: "Tipo de día", dataIndex: "tipo_dia" },
             { title: "Hora de salida", dataIndex: "hora_salida" },
             { title: "Hora de llegada", dataIndex: "hora_llegada" },
-            { title: "Recorrido", dataIndex: "recorrido_id" },
-            { title: "Directo", dataIndex: "directo" },
+            { title: "Origen", dataIndex: "origen", render: (val) => val || '-' },
+            { title: "Destino", dataIndex: "destino", render: (val) => val || '-' },
+            { title: "Línea", dataIndex: "linea_nombre", render: (val) => val || '-' },
+            { title: "Directo", dataIndex: "directo", render: (val) => val ? <CheckOutlined style={{ color: 'green' }} /> : <CloseOutlined style={{ color: 'red' }} /> },
           ]}
           formFields={[
-            { name: "tipo_dia", label: "Tipo de día", rules: { required: true } },
-            { name: "hora_salida", label: "Hora salida", rules: { required: true } },
-            { name: "hora_llegada", label: "Hora llegada", rules: { required: true } },
-            { name: "recorrido_id", label: "Recorrido", rules: { required: true } },
-            { name: "directo", label: "Directo", rules: { required: true } },
+            { name: "tipo_dia", label: "Tipo de día", type: "select", options: tipoDiaOptions, rules: { required: true } },
+            { name: "hora_salida", label: "Hora salida", type: "time", rules: { required: true } },
+            { name: "hora_llegada", label: "Hora llegada", type: "time", rules: { required: true } },
+            { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: { required: true } },
+            { name: "directo", label: "Directo", type: "switch" },
           ]}
           pagination={false}
         />
@@ -84,7 +127,7 @@ const Admin = () => {
           ]}
           formFields={[
             { name: "username", label: "Nombre de usuario", rules: { required: true } },
-            { name: "role", label: "Rol", rules: { required: true } },
+            { name: "role", label: "Rol", type: "select", options: rolesOptions, rules: { required: true } },
           ]}
           pagination={false}
         />

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useCrud } from '../../hooks/useCrud'
 import { Controller, useForm } from 'react-hook-form'
-import { Button, Input, message, Modal, Popconfirm, Table } from 'antd'
+import { Button, Input, message, Modal, Popconfirm, Table, Select, Switch, TimePicker } from 'antd'
+import dayjs from 'dayjs'
 
 const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint)
@@ -15,10 +16,23 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     setValue
   } = useForm()
 
+  // Flatten data antes de setearlo (puedes adaptarlo para cada endpoint)
+  const flattenData = (arr) => {
+    return arr.map(item => {
+      const flat = { ...item }
+      // Casos típicos, puedes ampliarlo por endpoint
+      if(item.linea && item.linea.nombre) flat.linea_nombre = item.linea.nombre
+      if(item.recorrido && item.recorrido.origen && item.recorrido.destino)
+        flat.recorrido_label = `${item.recorrido.origen} – ${item.recorrido.destino}`
+      // Agrega más reglas aquí según tus modelos backend
+      return flat
+    })
+  }
+
   const fetchData = async() => {
     try {
       const result = await getAll()
-      setData(result)
+      setData(flattenData(result))
     } catch (error) {
       message.error(`Error al cargar ${title.toLowerCase()}: `, error)
     }
@@ -91,6 +105,49 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     }
   ]
 
+  // Nuevo renderFormField para soportar tipos
+  const renderFormField = (field, inputField) => {
+    switch(field.type){
+      case 'select':
+        return (
+          <Select
+            className="w-full"
+            value={inputField.value !== undefined ? inputField.value : null}
+            onChange={inputField.onChange}
+            options={field.options || []}
+            placeholder={`Seleccione ${field.label.toLowerCase()}`}
+          />
+        )
+      case 'switch':
+        return (
+          <Switch
+            checked={!!inputField.value}
+            onChange={val => inputField.onChange(val)}
+          />
+        )
+      case 'time':
+        return (
+          <TimePicker
+            format="HH:mm"
+            className="w-full"
+            value={inputField.value ? dayjs(inputField.value, "HH:mm") : null}
+            onChange={(time) => {
+              // Asegurarse de enviar el formato correcto HH:mm
+              if (time) {
+                const formatted = time.format("HH:mm")
+                inputField.onChange(formatted)
+              } else {
+                inputField.onChange(null)
+              }
+            }}
+            placeholder="Seleccione hora"
+          />
+        )
+      default:
+        return <Input {...inputField} className="w-full" />
+    }
+  }
+
   return (
     <>
       <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
@@ -129,9 +186,8 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
                 name={field.name}
                 control={control}
                 rules={field.rules}
-                render={({ field: inputField }) => (
-                  <Input {...inputField} className="w-full"/>
-                )}
+                render={({ field: inputField }) => renderFormField(field, inputField)}
+                {...(field.type === 'switch' ? { valuePropName: 'checked' } : {})}
               />
             </div>
           ))}
