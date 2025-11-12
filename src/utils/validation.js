@@ -75,3 +75,30 @@ export const validateLineaNombre = (nombre) => {
 
   return { valid: true };
 };
+
+// Valida username
+export const validateUsername = (username) => {
+  if (!username || username.length < 3) {
+    return {
+      valid: false,
+      message: "El nombre de usuario debe tener al menos 3 caracteres",
+    };
+  }
+
+  if (username.length > 25) {
+    return {
+      valid: false,
+      message: "El nombre de usuario no puede exceder 25 caracteres",
+    };
+  }
+
+  // Solo letras, números y guiones bajos
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    return {
+      valid: false,
+      message: "Solo se permiten letras, números y guiones bajos",
+    };
+  }
+
+  return { valid: true };
+};
