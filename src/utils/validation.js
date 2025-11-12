@@ -6,20 +6,17 @@ export const timeToMinutes = (time) => {
   return hours * 60 + minutes;
 };
 
-// Calcula duración del viaje considerando paso de medianoche
 export const calculateTripDuration = (horaSalida, horaLlegada) => {
   let salidaMin = timeToMinutes(horaSalida);
   let llegadaMin = timeToMinutes(horaLlegada);
 
-  // Si llegada es menor que salida, el viaje cruza medianoche
   if (llegadaMin < salidaMin) {
-    llegadaMin += 24 * 60; // Añadir 24 horas
+    llegadaMin += 24 * 60;
   }
 
-  return llegadaMin - salidaMin; // Duración en minutos
+  return llegadaMin - salidaMin;
 };
 
-// Valida que la hora de llegada sea posterior a la salida (considerando medianoche)
 export const validateHorarioTimes = (horaSalida, horaLlegada) => {
   if (!horaSalida || !horaLlegada) {
     return { valid: false, message: "Ambas horas son requeridas" };
@@ -27,7 +24,6 @@ export const validateHorarioTimes = (horaSalida, horaLlegada) => {
 
   const duracion = calculateTripDuration(horaSalida, horaLlegada);
 
-  // Validar duración mínima (5 minutos)
   if (duracion < 5) {
     return {
       valid: false,
@@ -35,7 +31,6 @@ export const validateHorarioTimes = (horaSalida, horaLlegada) => {
     };
   }
 
-  // Validar duración máxima (10 horas = 600 minutos)
   if (duracion > 600) {
     return {
       valid: false,
@@ -49,4 +44,34 @@ export const validateHorarioTimes = (horaSalida, horaLlegada) => {
       duracion >= 1440 - 60 ? " (cruza medianoche)" : ""
     }`,
   };
+};
+
+export const validateRecorrido = (origen, destino) => {
+  if (!origen || !destino) {
+    return { valid: false, message: "Origen y destino son requeridos" };
+  }
+
+  if (origen.trim() === destino.trim()) {
+    return { valid: false, message: "Origen y destino no pueden ser iguales" };
+  }
+
+  return { valid: true };
+};
+
+export const validateLineaNombre = (nombre) => {
+  if (!nombre || nombre.trim().length < 2) {
+    return {
+      valid: false,
+      message: "El nombre debe tener al menos 2 caracteres",
+    };
+  }
+
+  if (nombre.length > 50) {
+    return {
+      valid: false,
+      message: "El nombre no puede exceder 50 caracteres",
+    };
+  }
+
+  return { valid: true };
 };
