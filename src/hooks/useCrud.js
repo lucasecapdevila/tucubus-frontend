@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../services/api";
 
-export const useCrud = (resource) => {
+export const useCrud = (endpoint) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -10,11 +10,11 @@ export const useCrud = (resource) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.get(`/${resource}`);
+      const { data } = await api.get(`/${endpoint}`);
       return data;
     } catch (err) {
       setError(err.message);
-      console.error(`Error obteniendo ${resource}:`, err);
+      console.error(`Error obteniendo ${endpoint}:`, err);
       throw err;
     } finally {
       setLoading(false);
@@ -26,11 +26,11 @@ export const useCrud = (resource) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.get(`/${resource}/${id}`);
+      const { data } = await api.get(`/${endpoint}/${id}`);
       return data;
     } catch (error) {
       setError(error.message);
-      console.error(`Error obteniendo ${resource} con id ${id}:`, error);
+      console.error(`Error obteniendo ${endpoint} con id ${id}:`, error);
       throw error;
     } finally {
       setLoading(false);
@@ -42,11 +42,11 @@ export const useCrud = (resource) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.post(`/${resource}`, newData);
+      const { data } = await api.post(`/${endpoint}`, newData);
       return data;
     } catch (error) {
       setError(error.message);
-      console.error(`Error al crear ${resource}`, error);
+      console.error(`Error al crear ${endpoint}`, error);
       throw error;
     } finally {
       setLoading(false);
@@ -58,11 +58,11 @@ export const useCrud = (resource) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.put(`/${resource}/${id}`, updatedData);
+      const { data } = await api.put(`/${endpoint}/${id}`, updatedData);
       return data;
     } catch (error) {
       setError(error.message);
-      console.error(`Error al actualizar ${resource} con id ${id}:`, error);
+      console.error(`Error al actualizar ${endpoint} con id ${id}:`, error);
       throw error;
     } finally {
       setLoading(false);
@@ -73,11 +73,11 @@ export const useCrud = (resource) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.delete(`/${resource}/${id}`);
+      const { data } = await api.delete(`/${endpoint}/${id}`);
       return data;
     } catch (error) {
       setError(error.message);
-      console.error(`Error al eliminar ${resource} con id ${id}:`, error);
+      console.error(`Error al eliminar ${endpoint} con id ${id}:`, error);
       throw error;
     } finally {
       setLoading(false);

@@ -20,7 +20,7 @@ function App() {
           <Route exact path="/login" element={<Login />} />
           <Route 
             exact 
-            path="/admin" 
+            path="/admin/*" 
             element={
               <RutasProtegidas>
                 <RutasAdmin />
