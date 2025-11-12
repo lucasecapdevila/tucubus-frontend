@@ -23,22 +23,68 @@ const Admin = () => {
       )
     },
     {
+      key: "recorridos",
+      label: "Recorridos",
+      children: (
+        <AdminTable 
+          title='Recorridos'
+          endpoint='recorridos'
+          columns={[
+            { title: "ID", dataIndex: "id" },
+            { title: "Origen", dataIndex: "origen" },
+            { title: "Destino", dataIndex: "destino" },
+            { title: "Linea", dataIndex: "linea_id" },
+          ]}
+          formFields={[
+            { name: "origen", label: "Origen", rules: { required: true } },
+            { name: "destino", label: "Destino", rules: { required: true } },
+            { name: "linea_id", label: "Linea", rules: { required: true } },
+          ]}
+          pagination={false}
+        />
+      )
+    },
+    {
       key: "horarios",
       label: "Horarios",
       children: (
         <AdminTable 
           title='Horarios'
-          endpoint='horarios-por-recorrido/1?tipo_dia=habil'
+          endpoint='horarios'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Linea", dataIndex: "linea" },
-            { title: "Hora salida", dataIndex: "hora_salida" },
-            { title: "Hora llegada", dataIndex: "hora_llegada" },
+            { title: "Tipo de día", dataIndex: "tipo_dia" },
+            { title: "Hora de salida", dataIndex: "hora_salida" },
+            { title: "Hora de llegada", dataIndex: "hora_llegada" },
+            { title: "Recorrido", dataIndex: "recorrido_id" },
+            { title: "Directo", dataIndex: "directo" },
           ]}
           formFields={[
-            { name: "linea", label: "Linea", rules: { required: true } },
+            { name: "tipo_dia", label: "Tipo de día", rules: { required: true } },
             { name: "hora_salida", label: "Hora salida", rules: { required: true } },
             { name: "hora_llegada", label: "Hora llegada", rules: { required: true } },
+            { name: "recorrido_id", label: "Recorrido", rules: { required: true } },
+            { name: "directo", label: "Directo", rules: { required: true } },
+          ]}
+          pagination={false}
+        />
+      )
+    },
+    {
+      key: "usuarios",
+      label: "Usuarios",
+      children: (
+        <AdminTable 
+          title='Usuarios'
+          endpoint='users'
+          columns={[
+            { title: "ID", dataIndex: "id" },
+            { title: "Nombre de usuario", dataIndex: "username" },
+            { title: "Rol", dataIndex: "role" },
+          ]}
+          formFields={[
+            { name: "username", label: "Nombre de usuario", rules: { required: true } },
+            { name: "role", label: "Rol", rules: { required: true } },
           ]}
           pagination={false}
         />
