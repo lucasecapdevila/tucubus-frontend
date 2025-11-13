@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useCrud } from '../../hooks/useCrud'
 import { Controller, useForm } from 'react-hook-form'
 import { Button, Input, message, Modal, Popconfirm, Table, Select, Switch, TimePicker, Alert } from 'antd'
@@ -47,9 +47,10 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
 
   useEffect(() => {
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
 
-  const handleOpen = (record = null) => {
+  const handleOpen = async (record = null) => {
     if(record){
       setEditing(record)
       formFields.forEach((field) => {
@@ -82,7 +83,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
             
             setValidationAlert({
               type: 'success',
-              message: `Duración: ${hoursMin}${crosses ? 'Este viaje cruza medianoche' : ''}`
+              message: `Duración: ${hoursMin}${crosses ? ' - Este viaje cruza medianoche' : ''}`
             });
           } else {
             setValidationAlert({
@@ -140,12 +141,22 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
   }, [watch, open, endpoint]);
 
   const onSubmit = async(values) => {
+    // Prevenir envío si hay alerta de error visible
+    if (validationAlert?.type === 'error') {
+      message.error('Por favor corrija los errores antes de guardar');
+      return;
+    }
+
     try {
-      // Validaciones específicas por endpoint
+      // Validaciones específicas por endpoint antes de enviar
       if (endpoint === 'horarios') {
         const timeValidation = validateHorarioTimes(values.hora_salida, values.hora_llegada);
         if (!timeValidation.valid) {
           message.error(timeValidation.message);
+          setValidationAlert({
+            type: 'error',
+            message: `${timeValidation.message}`
+          });
           return;
         }
       }
@@ -154,6 +165,10 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
         const recorridoValidation = validateRecorrido(values.origen, values.destino);
         if (!recorridoValidation.valid) {
           message.error(recorridoValidation.message);
+          setValidationAlert({
+            type: 'error',
+            message: `${recorridoValidation.message}`
+          });
           return;
         }
       }
@@ -162,11 +177,14 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
         const lineaValidation = validateLineaNombre(values.nombre);
         if (!lineaValidation.valid) {
           message.error(lineaValidation.message);
+          setValidationAlert({
+            type: 'error',
+            message: `${lineaValidation.message}`
+          });
           return;
         }
       }
 
-      console.log('Valores a enviar:', values) // Debug
       if(editing){
         await update(editing.id, values)
         message.success(`${title} actualizado`)
@@ -174,12 +192,14 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
         await create(values)
         message.success(`${title} creado`)
       }
+      
       fetchData()
       setOpen(false)
       reset()
       setValidationAlert(null)
     } catch (error) {
-      message.error(`Error al guardar: ${error.response?.data?.detail || error.message}`)
+      const errorDetail = error.response?.data?.detail || error.message;
+      message.error(`Error al guardar: ${errorDetail}`)
       console.error('Error completo:', error.response?.data)
     }
   }
@@ -190,7 +210,9 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       message.success(`${title} eliminado`)
       fetchData()
     } catch (error) {
-      message.error(`Error al eliminar: ${error.message}`)
+      const errorDetail = error.response?.data?.detail || error.message;
+      message.error(errorDetail, 8)
+      console.error('Error al eliminar:', error.response?.data)
     }
   }
 
@@ -205,8 +227,20 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
             Editar
           </Button>
           <Popconfirm
-            title="¿Eliminar este registro?"
+            title={`¿Eliminar este ${title.toLowerCase()}?`}
+            description={
+              endpoint === 'lineas' ? 
+                "Si contiene recorridos/horarios, no se podrá eliminar" :
+              endpoint === 'recorridos' ?
+                "Si contiene horarios, no se podrá eliminar" :
+              endpoint === 'users' ?
+                "No se puede eliminar el último administrador" :
+                "Esta acción no se puede deshacer"
+            }
             onConfirm={() => handleDelete(record.id)}
+            okText="Sí, eliminar"
+            cancelText="Cancelar"
+            okButtonProps={{ danger: true }}
           >
             <Button type='link' danger>
               Eliminar
@@ -243,10 +277,8 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
             className="w-full"
             value={inputField.value ? dayjs(inputField.value, "HH:mm") : null}
             onChange={(time) => {
-              // Asegurarse de enviar el formato correcto HH:mm
               if (time) {
                 const formatted = time.format("HH:mm")
-                console.log('Hora formateada:', formatted) // Debug
                 inputField.onChange(formatted)
               } else {
                 inputField.onChange(null)
@@ -265,7 +297,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     <>
       <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
         <h2 className="text-lg sm:text-xl font-bold text-primary-text">{title}</h2>
-        <Button type="primary" onClick={() => handleOpen()} className="self-start sm:self-center w-fit">
+        <Button onClick={() => handleOpen()} style={{ backgroundColor: '#0c5392', color: '#fff' }} className="self-start sm:self-center w-fit">
           Nuevo {title}
         </Button>
       </div>
@@ -287,9 +319,14 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       <Modal
         title={editing ? `Editar ${title}` : `Nuevo ${title}`}
         open={open}
+        cancelText='Cancelar'
         onCancel={() => {
           setOpen(false)
           setValidationAlert(null)
+        }}
+        okText='Guardar'
+        okButtonProps={{
+          style: { backgroundColor: '#0c5392', color: '#fff'}
         }}
         onOk={handleSubmit(onSubmit)}
         destroyOnHidden

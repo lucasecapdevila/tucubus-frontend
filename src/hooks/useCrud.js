@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import api from "../services/api";
 
 export const useCrud = (endpoint) => {
@@ -6,7 +6,7 @@ export const useCrud = (endpoint) => {
   const [error, setError] = useState(null);
 
   //  GET - Obtener registros
-  const getAll = async () => {
+  const getAll = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -19,70 +19,82 @@ export const useCrud = (endpoint) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [endpoint]);
 
   //  GET - Obtener un registro por ID
-  const getByID = async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const { data } = await api.get(`/${endpoint}/${id}`);
-      return data;
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error obteniendo ${endpoint} con id ${id}:`, error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const getByID = useCallback(
+    async (id) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data } = await api.get(`/${endpoint}/${id}`);
+        return data;
+      } catch (error) {
+        setError(error.message);
+        console.error(`Error obteniendo ${endpoint} con id ${id}:`, error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [endpoint]
+  );
 
   //  POST - Crear nuevo registro
-  const create = async (newData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const { data } = await api.post(`/${endpoint}`, newData);
-      return data;
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error al crear ${endpoint}`, error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const create = useCallback(
+    async (newData) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data } = await api.post(`/${endpoint}`, newData);
+        return data;
+      } catch (error) {
+        setError(error.message);
+        console.error(`Error al crear ${endpoint}`, error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [endpoint]
+  );
 
   //  PUT - Editar un registro
-  const update = async (id, updatedData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const { data } = await api.put(`/${endpoint}/${id}`, updatedData);
-      return data;
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error al actualizar ${endpoint} con id ${id}:`, error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const update = useCallback(
+    async (id, updatedData) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data } = await api.put(`/${endpoint}/${id}`, updatedData);
+        return data;
+      } catch (error) {
+        setError(error.message);
+        console.error(`Error al actualizar ${endpoint} con id ${id}:`, error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [endpoint]
+  );
 
-  const remove = async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const { data } = await api.delete(`/${endpoint}/${id}`);
-      return data;
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error al eliminar ${endpoint} con id ${id}:`, error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const remove = useCallback(
+    async (id) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data } = await api.delete(`/${endpoint}/${id}`);
+        return data;
+      } catch (error) {
+        setError(error.message);
+        console.error(`Error al eliminar ${endpoint} con id ${id}:`, error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [endpoint]
+  );
 
   return { loading, error, getAll, getByID, create, update, remove };
 };
