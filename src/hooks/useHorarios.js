@@ -45,15 +45,16 @@ export const useHorarios = () => {
     }
   };
 
-  const getConexiones = async ({ tipo_dia, direccion, hora_actual }) => {
+  const getConexiones = async ({ origen, destino, tipo_dia, hora_actual }) => {
     try {
       setLoading(true);
       setError(null);
 
       const { data } = await api.get("/conexiones/", {
         params: {
+          origen,
+          destino,
           tipo_dia,
-          direccion: direccion || "ida",
           hora_actual: hora_actual || "00:00",
         },
       });
@@ -64,7 +65,6 @@ export const useHorarios = () => {
         error.response?.data?.detail || "Error al buscar conexiones";
       setError(errorMessage);
       console.error("Error al obtener conexiones:", error);
-      console.error("Detalles del error:", error.response?.data);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
