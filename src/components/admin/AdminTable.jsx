@@ -14,6 +14,7 @@ import {
   TimePicker,
   Alert,
 } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   validateHorarioTimes,
@@ -23,8 +24,6 @@ import {
   formatDuration,
   crossesMidnight,
 } from "../../utils/validation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilePen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 
 const AdminTable = ({
@@ -32,7 +31,6 @@ const AdminTable = ({
   endpoint,
   columns,
   formFields,
-  pagination = false,
 }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint);
   const [data, setData] = useState([]);
@@ -42,6 +40,8 @@ const AdminTable = ({
   const { handleSubmit, control, reset, setValue, watch } = useForm();
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
+
+  const PAGE_SIZE = 10;
 
   const flattenData = (arr) => {
     return arr.map((item) => {
@@ -250,7 +250,7 @@ const AdminTable = ({
       render: (_, record) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
-            <FontAwesomeIcon size="xl" color="#F4B400" icon={faFilePen} />
+            <EditOutlined style={{  color: '#0c5392', fontSize: '16px' }} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
@@ -269,13 +269,19 @@ const AdminTable = ({
             okButtonProps={{ danger: true }}
           >
             <Button type="link" danger>
-              <FontAwesomeIcon size="xl" icon={faTrash} />
+              <DeleteOutlined style={{ fontSize: '16px' }} />
             </Button>
           </Popconfirm>
         </>
       ),
     },
   ];
+
+  const tablePagination = data.length > PAGE_SIZE ? {
+    pageSize: PAGE_SIZE,
+    showSizeChanger: false,
+    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`,
+  } : false;
 
   const renderFormField = (field, inputField) => {
     switch (field.type) {
@@ -400,7 +406,7 @@ const AdminTable = ({
               dataSource={data}
               rowKey="id"
               loading={{ spinning: loading, indicator: customSpinner }}
-              pagination={pagination}
+              pagination={tablePagination}
               size="large"
               className="w-full max-w-full"
             />

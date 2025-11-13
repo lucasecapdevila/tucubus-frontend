@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FadeLoader } from "react-spinners";
 import { AdminTable } from "../common";
 import { Tabs } from "antd";
@@ -36,7 +36,7 @@ const Admin = () => {
     try {
       const recorridos = await getAllRecorridos();
       const recorridosOpts = recorridos.map(recorrido => ({
-        label: `${recorrido.origen} - ${recorrido.destino}`,
+        label: `${recorrido.origen} - ${recorrido.destino} (Línea: ${recorrido.linea_nombre})`,
         value: recorrido.id,
       }));
       setRecorridosOptions(recorridosOpts);
@@ -88,7 +88,6 @@ const Admin = () => {
           formFields={[
             { name: "nombre", label: "Nombre", rules: { required: true } },
           ]}
-          pagination={false}
         />
       )
     },
@@ -110,7 +109,6 @@ const Admin = () => {
             { name: "destino", label: "Destino", rules: { required: true } },
             { name: "linea_id", label: "Linea", type: "select", options: lineasOptions, rules: { required: true } },
           ]}
-          pagination={false}
         />
       )
     },
@@ -138,7 +136,6 @@ const Admin = () => {
             { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: { required: true } },
             { name: "directo", label: "Directo", type: "switch" },
           ]}
-          pagination={false}
         />
       )
     },
@@ -158,7 +155,6 @@ const Admin = () => {
             { name: "username", label: "Nombre de usuario", rules: { required: true } },
             { name: "role", label: "Rol", type: "select", options: rolesOptions, rules: { required: true } },
           ]}
-          pagination={false}
         />
       )
     },
