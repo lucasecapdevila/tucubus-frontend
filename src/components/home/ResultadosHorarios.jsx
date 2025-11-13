@@ -5,7 +5,7 @@ import { FadeLoader } from "react-spinners";
 import { 
   ClockCircleOutlined, 
   EnvironmentOutlined, 
-  SwapOutlined, 
+  ArrowRightOutlined, 
   NodeIndexOutlined, // Icono para Conexión
   LineOutlined // Icono para tramo directo
 } from "@ant-design/icons";
@@ -176,7 +176,7 @@ const ResultadosHorarios = ({ searchData }) => {
           <div className="flex justify-between items-start border-b pb-2">
             <div className="flex items-center gap-2 text-xl font-bold">
               <span className="text-primary-text">{item.hora_salida}</span>
-              <SwapOutlined className="text-gray-400 text-sm" />
+              <ArrowRightOutlined className="text-gray-400 text-sm" />
               <span className="text-secondary-text">{item.hora_llegada}</span>
             </div>
             <div className="flex flex-col gap-1 items-end">
@@ -242,7 +242,7 @@ const ResultadosHorarios = ({ searchData }) => {
                     <div className="border-l pl-3">
                         <p className="font-semibold text-sm">Tramo 2 ({item.linea_b_nombre || '-'})</p>
                         <p className="text-xs font-semibold text-orange-600 mb-1">
-                            <NodeIndexOutlined /> Espera en {item.ciudad_conexion}: {item.tiempo_espera_min} min
+                            <NodeIndexOutlined /> Espera en {item.ciudad_conexion}: {formatDuration(item.tiempo_espera_min)}
                         </p>
                         <p className="text-xs text-gray-600">
                             {item.ciudad_conexion} → {searchData.destiny}
@@ -297,7 +297,7 @@ const ResultadosHorarios = ({ searchData }) => {
           Resultados de búsqueda
         </h2>
         <p className="text-center text-secondary-text">
-          {searchData.origin} <SwapOutlined /> {searchData.destiny} • {searchData.day}
+          {searchData.origin} <ArrowRightOutlined /> {searchData.destiny} • {searchData.day}
           {searchData.time && ` • ${searchData.time}`}
         </p>
       </div>
