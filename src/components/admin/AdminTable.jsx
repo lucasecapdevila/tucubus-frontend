@@ -31,7 +31,6 @@ const AdminTable = ({
   endpoint,
   columns,
   formFields,
-  pagination = false,
 }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint);
   const [data, setData] = useState([]);
@@ -41,6 +40,8 @@ const AdminTable = ({
   const { handleSubmit, control, reset, setValue, watch } = useForm();
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
+
+  const PAGE_SIZE = 10;
 
   const flattenData = (arr) => {
     return arr.map((item) => {
@@ -276,6 +277,12 @@ const AdminTable = ({
     },
   ];
 
+  const tablePagination = data.length > PAGE_SIZE ? {
+    pageSize: PAGE_SIZE,
+    showSizeChanger: false,
+    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`,
+  } : false;
+
   const renderFormField = (field, inputField) => {
     switch (field.type) {
       case "select":
@@ -399,7 +406,7 @@ const AdminTable = ({
               dataSource={data}
               rowKey="id"
               loading={{ spinning: loading, indicator: customSpinner }}
-              pagination={pagination}
+              pagination={tablePagination}
               size="large"
               className="w-full max-w-full"
             />
