@@ -18,10 +18,12 @@
     "@tailwindcss/vite": "^4.1.16",
     "antd": "^5.28.0",
     "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.66.0",
     "react-hot-toast": "^2.6.0",
+    "react-responsive": "^10.0.1",
     "react-router-dom": "^7.9.5",
     "react-spinners": "^0.17.0",
     "tailwindcss": "^4.1.16"
