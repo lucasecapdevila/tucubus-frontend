@@ -122,7 +122,6 @@ const Admin = () => {
           title='Horarios'
           endpoint='horarios'
           columns={[
-            { title: "ID", dataIndex: "id" },
             { title: "Tipo de día", dataIndex: "tipo_dia" },
             { title: "Hora de salida", dataIndex: "hora_salida" },
             { title: "Hora de llegada", dataIndex: "hora_llegada" },

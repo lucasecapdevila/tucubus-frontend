@@ -27,7 +27,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-background">
+    <div className="flex flex-col justify-center items-center px-4 py-16 sm:py-28 bg-background">
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8 flex flex-col gap-6">
         <h2 className="text-2xl font-bold text-center text-primary-text">Iniciar sesión</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

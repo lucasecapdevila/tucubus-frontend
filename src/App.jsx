@@ -13,7 +13,7 @@ function App() {
   return (
     <BrowserRouter>
       <Sidebar loggedUser={loggedUser} setLoggedUser={setLoggedUser} />
-      <div className="mx-auto lg:pl-64">
+      <div className="mx-auto lg:pl-64 grow">
         <Routes>
           <Route exact path="/" element={<Home />} />
           <Route exact path="/ayuda" element={<Help />} />
