@@ -83,7 +83,7 @@ const Admin = () => {
           endpoint='lineas'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Nombre", dataIndex: "nombre" },
+            { title: "Nombre", dataIndex: "nombre", sorter: (a, b) => a.nombre.localeCompare(b.nombre), showSorterTooltip: false },
           ]}
           formFields={[
             { name: "nombre", label: "Nombre", rules: { required: true } },
@@ -101,9 +101,9 @@ const Admin = () => {
           endpoint='recorridos'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Origen", dataIndex: "origen" },
-            { title: "Destino", dataIndex: "destino" },
-            { title: "Linea", dataIndex: "linea_nombre", render: (val) => val || '-' },
+            { title: "Origen", dataIndex: "origen", sorter: (a, b) => a.origen.localeCompare(b.origen), showSorterTooltip: false },
+            { title: "Destino", dataIndex: "destino", sorter: (a, b) => a.destino.localeCompare(b.destino), showSorterTooltip: false },
+            { title: "Linea", dataIndex: "linea_nombre", render: (val) => val || '-', sorter: (a, b) => a.linea_nombre.localeCompare(b.linea_nombre), showSorterTooltip: false },
           ]}
           formFields={[
             { name: "origen", label: "Origen", rules: { required: true } },
@@ -122,18 +122,18 @@ const Admin = () => {
           title='Horarios'
           endpoint='horarios'
           columns={[
-            { title: "Tipo de día", dataIndex: "tipo_dia" },
-            { title: "Hora de salida", dataIndex: "hora_salida" },
-            { title: "Hora de llegada", dataIndex: "hora_llegada" },
-            { title: "Origen", dataIndex: "origen", render: (val) => val || '-' },
-            { title: "Destino", dataIndex: "destino", render: (val) => val || '-' },
-            { title: "Línea", dataIndex: "linea_nombre", render: (val) => val || '-' },
-            { title: "Directo", dataIndex: "directo", render: (val) => val ? <CheckOutlined style={{ color: 'green' }} /> : <CloseOutlined style={{ color: 'red' }} /> },
+            { title: "Día", dataIndex: "tipo_dia", sorter: (a, b) => a.tipo_dia.localeCompare(b.tipo_dia), showSorterTooltip: false },
+            { title: "Salida", dataIndex: "hora_salida", sorter: (a, b) => a.hora_salida.localeCompare(b.hora_salida), showSorterTooltip: false },
+            { title: "Llegada", dataIndex: "hora_llegada", sorter: (a, b) => a.hora_llegada.localeCompare(b.hora_llegada), showSorterTooltip: false },
+            { title: "Origen", dataIndex: "origen", render: (val) => val || '-', sorter: (a, b) => (a.origen || '').localeCompare(b.origen || ''), showSorterTooltip: false },
+            { title: "Destino", dataIndex: "destino", render: (val) => val || '-', sorter: (a, b) => (a.destino || '').localeCompare(b.destino || ''), showSorterTooltip: false },
+            { title: "Línea", dataIndex: "linea_nombre", render: (val) => val || '-', sorter: (a, b) => (a.linea_nombre || '').localeCompare(b.linea_nombre || ''), showSorterTooltip: false },
+            { title: "Directo", dataIndex: "directo", render: (val) => val ? <CheckOutlined style={{ color: 'green' }} /> : <CloseOutlined style={{ color: 'red' }} />, sorter: (a, b) => a.directo - b.directo, showSorterTooltip: false },
           ]}
           formFields={[
             { name: "tipo_dia", label: "Tipo de día", type: "select", options: tipoDiaOptions, rules: { required: true } },
-            { name: "hora_salida", label: "Hora salida", type: "time", rules: { required: true } },
-            { name: "hora_llegada", label: "Hora llegada", type: "time", rules: { required: true } },
+            { name: "hora_salida", label: "Hora de salida", type: "time", rules: { required: true } },
+            { name: "hora_llegada", label: "Hora de llegada", type: "time", rules: { required: true } },
             { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: { required: true } },
             { name: "directo", label: "Directo", type: "switch" },
           ]}
@@ -150,8 +150,8 @@ const Admin = () => {
           endpoint='users'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Nombre de usuario", dataIndex: "username" },
-            { title: "Rol", dataIndex: "role" },
+            { title: "Nombre de usuario", dataIndex: "username", sorter: (a, b) => a.username.localeCompare(b.username), showSorterTooltip: false },
+            { title: "Rol", dataIndex: "role", sorter: (a, b) => a.role.localeCompare(b.role), showSorterTooltip: false },
           ]}
           formFields={[
             { name: "username", label: "Nombre de usuario", rules: { required: true } },
@@ -179,7 +179,7 @@ const Admin = () => {
             items={items}
             type="card"
             tabBarGutter={16}
-            className="bg-white rounded-lg shadow-md px-1 w-full"
+            className="bg-background rounded-lg shadow-md px-1 w-full"
             style={{overflowX:'auto', minWidth: '350px', width: '100%'}}
           />
         </div>
