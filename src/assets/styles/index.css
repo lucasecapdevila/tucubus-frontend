@@ -28,3 +28,9 @@ body,
   .text-primary-text{ color: var(--color-primary-text); }
   .text-secondary-text{ color: var(--color-secondary-text); }
 }
+
+.ant-radio-button-wrapper.ant-radio-button-wrapper-checked {
+  background-color: #0c5392 !important;
+  color: white;
+  border-color: #0c5392 !important;
+}
