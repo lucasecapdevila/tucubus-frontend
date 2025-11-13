@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FadeLoader } from "react-spinners";
 import { AdminTable } from "../common";
 import { Tabs } from "antd";
@@ -36,7 +36,7 @@ const Admin = () => {
     try {
       const recorridos = await getAllRecorridos();
       const recorridosOpts = recorridos.map(recorrido => ({
-        label: `${recorrido.origen} - ${recorrido.destino}`,
+        label: `${recorrido.origen} - ${recorrido.destino} (Línea: ${recorrido.linea_nombre})`,
         value: recorrido.id,
       }));
       setRecorridosOptions(recorridosOpts);

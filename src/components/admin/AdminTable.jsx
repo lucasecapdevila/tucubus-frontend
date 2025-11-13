@@ -14,6 +14,7 @@ import {
   TimePicker,
   Alert,
 } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   validateHorarioTimes,
@@ -23,8 +24,6 @@ import {
   formatDuration,
   crossesMidnight,
 } from "../../utils/validation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilePen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 
 const AdminTable = ({
@@ -250,7 +249,7 @@ const AdminTable = ({
       render: (_, record) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
-            <FontAwesomeIcon size="xl" color="#F4B400" icon={faFilePen} />
+            <EditOutlined style={{  color: '#0c5392', fontSize: '16px' }} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
@@ -269,7 +268,7 @@ const AdminTable = ({
             okButtonProps={{ danger: true }}
           >
             <Button type="link" danger>
-              <FontAwesomeIcon size="xl" icon={faTrash} />
+              <DeleteOutlined style={{ fontSize: '16px' }} />
             </Button>
           </Popconfirm>
         </>
