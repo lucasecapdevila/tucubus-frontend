@@ -122,6 +122,7 @@ const Admin = () => {
           title='Horarios'
           endpoint='horarios'
           columns={[
+            { title: "ID", dataIndex: "id" },
             { title: "Día", dataIndex: "tipo_dia", sorter: (a, b) => a.tipo_dia.localeCompare(b.tipo_dia), showSorterTooltip: false },
             { title: "Salida", dataIndex: "hora_salida", sorter: (a, b) => a.hora_salida.localeCompare(b.hora_salida), showSorterTooltip: false },
             { title: "Llegada", dataIndex: "hora_llegada", sorter: (a, b) => a.hora_llegada.localeCompare(b.hora_llegada), showSorterTooltip: false },
