@@ -5,6 +5,8 @@ import { FadeLoader } from "react-spinners";
 import { ClockCircleOutlined, EnvironmentOutlined, SwapOutlined } from "@ant-design/icons";
 import { useHorarios } from "../../hooks/useHorarios";
 import { calculateTripDuration, formatDuration } from "../../utils/validation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 const ResultadosHorarios = ({ searchData }) => {
   const [resultados, setResultados] = useState([]);
@@ -36,7 +38,14 @@ const ResultadosHorarios = ({ searchData }) => {
       }
 
       // Normalizar tipo_dia para que coincida con el backend
-      const tipo_dia_normalizado = day.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      let tipo_dia_normalizado = '';
+      if (day === 'Hábil') {
+        tipo_dia_normalizado = 'habil'; // Backend espera 'habil' (minúscula sin acento)
+      } else if (day === 'Sábado') {
+        tipo_dia_normalizado = 'sábado'; // Backend espera 'sábado' (minúscula con acento)
+      } else if (day === 'Domingo') {
+        tipo_dia_normalizado = 'domingo'; // Backend espera 'domingo'
+      }
 
       console.log('Parámetros de búsqueda:', {
         origen: origin,
@@ -83,19 +92,19 @@ const ResultadosHorarios = ({ searchData }) => {
   const renderDesktopItem = (item) => (
     <List.Item>
       <Card 
-        className="w-full hover:shadow-lg transition-shadow"
-        bordered={true}
+        className="w-full hover:shadow-lg transition-shadow border-0"
+        variant="borderless"
       >
         <div className="flex justify-between items-center">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <EnvironmentOutlined className="text-blue-600" />
               <span className="font-semibold text-lg">
-                {item.origen}
+                {searchData.origin}
               </span>
-              <SwapOutlined className="text-gray-400" />
+              <FontAwesomeIcon className="text-gray-600" icon={faArrowRight} />
               <span className="font-semibold text-lg">
-                {item.destino}
+                {searchData.destiny}
               </span>
             </div>
             
@@ -119,7 +128,7 @@ const ResultadosHorarios = ({ searchData }) => {
               <Tag color="green">Directo</Tag>
             )}
             <span className="text-sm text-gray-500">
-              Duración: {formatDuration(item.duracion)}
+              {formatDuration(item.duracion)}
             </span>
           </div>
         </div>
@@ -136,14 +145,14 @@ const ResultadosHorarios = ({ searchData }) => {
       >
         <div className="space-y-2">
           <div className="flex justify-between items-start">
-            <div className="flex-1">
+            <div className="flex-1 text-nowrap">
               <div className="flex items-center gap-1 text-sm">
                 <EnvironmentOutlined className="text-blue-600" />
-                <span className="font-semibold">{item.origen}</span>
+                <span className="font-semibold">{searchData.origin}</span>
               </div>
               <div className="flex items-center gap-1 text-sm mt-1">
-                <SwapOutlined className="text-gray-400" />
-                <span className="font-semibold">{item.destino}</span>
+                <FontAwesomeIcon className="text-gray-600" icon={faArrowRight} />
+                <span className="font-semibold">{searchData.destiny}</span>
               </div>
             </div>
             <div className="flex flex-col gap-1">
@@ -204,7 +213,7 @@ const ResultadosHorarios = ({ searchData }) => {
           Resultados de búsqueda
         </h2>
         <p className="text-center text-secondary-text">
-          {searchData.origin} → {searchData.destiny} • {searchData.day}
+          {searchData.origin} <FontAwesomeIcon className="text-gray-400 fa-xs" icon={faArrowRight} /> {searchData.destiny} • {searchData.day}
           {searchData.time && ` • ${searchData.time}`}
         </p>
       </div>

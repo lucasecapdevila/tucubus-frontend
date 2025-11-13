@@ -14,7 +14,7 @@ const Home = () => {
   const [loadingCiudades, setLoadingCiudades] = useState(true);
 
   // Métodos CRUD
-  const { getAll } = useCrud('recorridos');
+  const { getAll } = useCrud("recorridos");
 
   useEffect(() => {
     cargarCiudades();
@@ -24,14 +24,14 @@ const Home = () => {
     try {
       setLoadingCiudades(true);
       const recorridos = await getAll();
-      
+
       // Extraer ciudades únicas de orígenes y destinos
       const ciudadesSet = new Set();
-      recorridos.forEach(recorrido => {
+      recorridos.forEach((recorrido) => {
         if (recorrido.origen) ciudadesSet.add(recorrido.origen);
         if (recorrido.destino) ciudadesSet.add(recorrido.destino);
       });
-      
+
       // Convertir Set a array y ordenar alfabéticamente
       const ciudadesArray = Array.from(ciudadesSet).sort();
       setCiudades(ciudadesArray);
@@ -60,6 +60,18 @@ const Home = () => {
   const option = watch("option");
 
   const onSubmit = (data) => {
+    if (data.option === "llegar-a-la" || data.option === "ultimo-disponible") {
+      toast.error(
+        `La búsqueda por '${
+          data.option === "llegar-a-la"
+            ? "hora de llegada"
+            : "último disponible"
+        }' aún no está implementada.`
+      );
+      setSearchData(null); // Evita que ResultadosHorarios intente buscar
+      return;
+    }
+
     setSearchData({ ...data, day });
   };
 
@@ -82,7 +94,11 @@ const Home = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="bg-white shadow-md rounded-lg w-full max-w-xs sm:max-w-md mx-auto p-3 sm:p-6 flex flex-col gap-2 min-w-0"
           >
-            <Form.Item label="Día" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
+            <Form.Item
+              label="Día"
+              labelCol={{ span: 24 }}
+              wrapperCol={{ span: 24 }}
+            >
               <Radio.Group
                 value={day}
                 onChange={(e) => setDay(e.target.value)}
@@ -104,22 +120,27 @@ const Home = () => {
             <Controller
               name="origin"
               control={control}
-              rules={{ required: 'El origen es obligatorio' }}
+              rules={{ required: "El origen es obligatorio" }}
               render={({ field }) => (
                 <Form.Item
                   label="Origen"
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
-                  validateStatus={errors.origin ? 'error' : ''}
+                  validateStatus={errors.origin ? "error" : ""}
                   help={errors.origin?.message}
                 >
                   <Select
                     {...field}
                     placeholder="Seleccione ciudad"
-                    options={ciudades.map((city) => ({ label: city, value: city }))}
+                    options={ciudades.map((city) => ({
+                      label: city,
+                      value: city,
+                    }))}
                     showSearch
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
                     }
                   />
                 </Form.Item>
@@ -130,25 +151,31 @@ const Home = () => {
               name="destiny"
               control={control}
               rules={{
-                required: 'El destino es obligatorio',
+                required: "El destino es obligatorio",
                 validate: (value) =>
-                  value !== watch("origin") || 'El destino debe ser distinto al origen',
+                  value !== watch("origin") ||
+                  "El destino debe ser distinto al origen",
               }}
               render={({ field }) => (
                 <Form.Item
                   label="Destino"
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
-                  validateStatus={errors.destiny ? 'error' : ''}
+                  validateStatus={errors.destiny ? "error" : ""}
                   help={errors.destiny?.message}
                 >
                   <Select
                     {...field}
                     placeholder="Seleccione ciudad"
-                    options={ciudades.map((city) => ({ label: city, value: city }))}
+                    options={ciudades.map((city) => ({
+                      label: city,
+                      value: city,
+                    }))}
                     showSearch
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
                     }
                   />
                 </Form.Item>
@@ -158,13 +185,13 @@ const Home = () => {
             <Controller
               name="option"
               control={control}
-              rules={{ required: 'Seleccione una opción de horario' }}
+              rules={{ required: "Seleccione una opción de horario" }}
               render={({ field }) => (
                 <Form.Item
                   label="Horario"
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
-                  validateStatus={errors.option ? 'error' : ''}
+                  validateStatus={errors.option ? "error" : ""}
                   help={errors.option?.message}
                 >
                   <Select
@@ -174,7 +201,10 @@ const Home = () => {
                       { label: "Salir ahora", value: "salir-ahora" },
                       { label: "Salir a la(s)", value: "salir-a-la" },
                       { label: "Llegar a la(s)", value: "llegar-a-la" },
-                      { label: "Último disponible", value: "ultimo-disponible" },
+                      {
+                        label: "Último disponible",
+                        value: "ultimo-disponible",
+                      },
                     ]}
                   />
                 </Form.Item>
@@ -185,13 +215,13 @@ const Home = () => {
               <Controller
                 name="time"
                 control={control}
-                rules={{ required: 'Debe seleccionar un horario' }}
+                rules={{ required: "Debe seleccionar un horario" }}
                 render={({ field }) => (
                   <Form.Item
                     label="Selecciona el horario"
                     labelCol={{ span: 24 }}
                     wrapperCol={{ span: 24 }}
-                    validateStatus={errors.time ? 'error' : ''}
+                    validateStatus={errors.time ? "error" : ""}
                     help={errors.time?.message}
                   >
                     <TimePicker
@@ -220,9 +250,7 @@ const Home = () => {
             </Button>
           </form>
 
-          {searchData && (
-            <ResultadosHorarios searchData={searchData} />
-          )}
+          {searchData && <ResultadosHorarios searchData={searchData} />}
         </>
       )}
     </div>

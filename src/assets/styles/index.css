@@ -34,3 +34,8 @@ body,
   color: white;
   border-color: #0c5392 !important;
 }
+
+.ant-list-item {
+  padding-top: 0 !important; 
+  padding-bottom: 0 !important; 
+}
