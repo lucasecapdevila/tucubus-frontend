@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { FadeLoader } from "react-spinners";
 import { useCrud } from '../../hooks/useCrud'
 import { Controller, useForm } from 'react-hook-form'
-import { Button, Input, message, Modal, Popconfirm, Table, Select, Switch, TimePicker, Alert } from 'antd'
+import { Button, Input, Modal, Popconfirm, Table, Select, Switch, TimePicker, Alert } from 'antd'
 import dayjs from 'dayjs'
 import { 
   validateHorarioTimes, 
@@ -13,6 +14,7 @@ import {
 } from '../../utils/validation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFilePen, faTrash } from '@fortawesome/free-solid-svg-icons'
+import toast from 'react-hot-toast';
 
 const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint)
@@ -43,7 +45,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       const result = await getAll()
       setData(flattenData(result))
     } catch (error) {
-      message.error(`Error al cargar ${title.toLowerCase()}: ${error.message}`)
+      toast.error(`Error al cargar ${title.toLowerCase()}: ${error.message}`)
     }
   }
 
@@ -145,7 +147,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
   const onSubmit = async(values) => {
     // Prevenir envío si hay alerta de error visible
     if (validationAlert?.type === 'error') {
-      message.error('Por favor corrija los errores antes de guardar');
+      toast.error('Por favor corrija los errores antes de guardar');
       return;
     }
 
@@ -154,7 +156,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       if (endpoint === 'horarios') {
         const timeValidation = validateHorarioTimes(values.hora_salida, values.hora_llegada);
         if (!timeValidation.valid) {
-          message.error(timeValidation.message);
+          toast.error(timeValidation.message);
           setValidationAlert({
             type: 'error',
             message: `${timeValidation.message}`
@@ -166,7 +168,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       if (endpoint === 'recorridos') {
         const recorridoValidation = validateRecorrido(values.origen, values.destino);
         if (!recorridoValidation.valid) {
-          message.error(recorridoValidation.message);
+          toast.error(recorridoValidation.message);
           setValidationAlert({
             type: 'error',
             message: `${recorridoValidation.message}`
@@ -178,7 +180,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       if (endpoint === 'lineas') {
         const lineaValidation = validateLineaNombre(values.nombre);
         if (!lineaValidation.valid) {
-          message.error(lineaValidation.message);
+          toast.error(lineaValidation.message);
           setValidationAlert({
             type: 'error',
             message: `${lineaValidation.message}`
@@ -189,10 +191,10 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
 
       if(editing){
         await update(editing.id, values)
-        message.success(`${title} actualizado`)
+        toast.success(`${title} actualizado`)
       } else{
         await create(values)
-        message.success(`${title} creado`)
+        toast.success(`${title} creado`)
       }
       
       fetchData()
@@ -201,7 +203,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       setValidationAlert(null)
     } catch (error) {
       const errorDetail = error.response?.data?.detail || error.message;
-      message.error(`Error al guardar: ${errorDetail}`)
+      toast.error(`Error al guardar: ${errorDetail}`)
       console.error('Error completo:', error.response?.data)
     }
   }
@@ -209,11 +211,11 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
   const handleDelete = async(id) => {
     try {
       await remove(id)
-      message.success(`${title} eliminado`)
+      toast.success(`${title} eliminado`)
       fetchData()
     } catch (error) {
       const errorDetail = error.response?.data?.detail || error.message;
-      message.error(errorDetail, error.message)
+      toast.error(errorDetail, { duration: 6000 })
       console.error('Error al eliminar:', error.response?.data)
     }
   }
@@ -226,7 +228,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       render: (_, record) => (
         <>
           <Button type='link' onClick={() => handleOpen(record)}>
-            <FontAwesomeIcon size='xl' icon={faFilePen} />
+            <FontAwesomeIcon size='xl' color='#F4B400' icon={faFilePen} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
@@ -295,6 +297,13 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
     }
   }
 
+  // CAMBIO: Definir el spinner personalizado para la tabla
+  const customSpinner = (
+    <div className="w-full flex justify-center items-center py-2">
+      <FadeLoader color="#0c5392" loading={loading} />
+    </div>
+  );
+
   return (
     <>
       <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
@@ -310,7 +319,8 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
             columns={tableColumns}
             dataSource={data}
             rowKey='id'
-            loading={loading}
+            // CAMBIO: Usar el objeto de 'loading' para pasar el spinner personalizado
+            loading={{ spinning: loading, indicator: customSpinner }}
             pagination={pagination}
             size="large"
             className="w-full max-w-full"
@@ -321,18 +331,14 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       <Modal
         title={editing ? `Editar ${title}` : `Nuevo ${title}`}
         open={open}
-        cancelText='Cancelar'
         onCancel={() => {
           setOpen(false)
           setValidationAlert(null)
         }}
-        okText='Guardar'
-        okButtonProps={{
-          style: { backgroundColor: '#0c5392', color: '#fff'}
-        }}
         onOk={handleSubmit(onSubmit)}
         destroyOnHidden
       >
+        {/* ... (sin cambios en el formulario del modal) */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           {validationAlert && (
             <Alert

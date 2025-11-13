@@ -4,6 +4,7 @@ import { Footer, Sidebar } from "./components/common";
 import { useState } from "react";
 import RutasProtegidas from "./components/routes/RutasProtegidas";
 import RutasAdmin from "./components/routes/RutasAdmin";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const user = JSON.parse(sessionStorage.getItem('usuarioTucuBus')) || {}
@@ -30,6 +31,7 @@ function App() {
         </Routes>
       </div>
       <Footer />
+      <Toaster position="top-center" reverseOrder={false} />
     </BrowserRouter>
   )
 }

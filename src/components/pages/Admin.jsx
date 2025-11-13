@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { FadeLoader } from "react-spinners";
 import { AdminTable } from "../common";
 import { Tabs } from "antd";
 import { useCrud } from "../../hooks/useCrud";
 import { rolesOptions, tipoDiaOptions } from "../../utils/adminPanelOptions";
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import toast from "react-hot-toast";
 
 const Admin = () => {
   const [lineasOptions, setLineasOptions] = useState([]);
@@ -25,6 +27,7 @@ const Admin = () => {
       setLineasOptions(lineasOpts);
     } catch (error) {
       console.error("Error al cargar líneas:", error);
+      toast.error('Error al cargar las opciones de líneas');
     }
   };
 
@@ -39,6 +42,8 @@ const Admin = () => {
       setRecorridosOptions(recorridosOpts);
     } catch (error) {
       console.error("Error al cargar recorridos:", error);
+      // CAMBIO: Usar 'message' para notificar al usuario del error
+      toast.error('Error al cargar las opciones de recorridos');
     }
   };
 
@@ -163,7 +168,10 @@ const Admin = () => {
     <main className="w-full max-w-5xl mx-auto px-2 sm:px-6 py-8 pt-12 flex flex-col gap-4">
       <h1 className="text-2xl sm:text-3xl font-bold text-primary-text text-center mt-2 mb-4">Panel de Administración</h1>
       {isLoading ? (
-        <div className="text-center py-8">Cargando opciones...</div>
+        // CAMBIO: Usar FadeLoader en lugar de texto
+        <div className="w-full flex justify-center items-center py-12">
+          <FadeLoader color="#0c5392" loading={isLoading} size={50} />
+        </div>
       ) : (
         <div className="w-full">
           <Tabs
