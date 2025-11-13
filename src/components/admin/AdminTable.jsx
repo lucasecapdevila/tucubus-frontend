@@ -11,6 +11,8 @@ import {
   formatDuration,
   crossesMidnight
 } from '../../utils/validation'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFilePen, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }) => {
   const { getAll, create, update, remove, loading } = useCrud(endpoint)
@@ -211,7 +213,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       fetchData()
     } catch (error) {
       const errorDetail = error.response?.data?.detail || error.message;
-      message.error(errorDetail, 8)
+      message.error(errorDetail, error.message)
       console.error('Error al eliminar:', error.response?.data)
     }
   }
@@ -224,7 +226,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
       render: (_, record) => (
         <>
           <Button type='link' onClick={() => handleOpen(record)}>
-            Editar
+            <FontAwesomeIcon size='xl' icon={faFilePen} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
@@ -243,7 +245,7 @@ const AdminTable = ({ title, endpoint, columns, formFields, pagination = false }
             okButtonProps={{ danger: true }}
           >
             <Button type='link' danger>
-              Eliminar
+              <FontAwesomeIcon size='xl' icon={faTrash} />
             </Button>
           </Popconfirm>
         </>
