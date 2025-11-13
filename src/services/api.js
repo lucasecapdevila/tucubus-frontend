@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  //!  Luego reemplazar con backend deployado
-  baseURL: import.meta.env.VITE_LOCALHOST,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 //  Interceptor para agregar token
