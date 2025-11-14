@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Menu } from "antd";
+import { useState, useEffect } from "react";
+import { Menu, Popconfirm } from "antd";
 import logo from "../../assets/img/logo.webp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -64,7 +64,20 @@ const Sidebar = () => {
   };
 
   const loginLogoutItem = user ?
-    [{ key: '4', label: <span style={{cursor:'pointer'}} onClick={handleLogout}>Cerrar sesión</span> }] :
+    [{ 
+  key: '4', 
+  label: (
+    <Popconfirm
+      title="¿Seguro que deseas cerrar sesión?"
+      okText="Sí"
+      cancelText="No"
+      onConfirm={handleLogout}
+    >
+      <span style={{ cursor: "pointer" }}>Cerrar sesión</span>
+    </Popconfirm>
+  )
+}]
+ :
     [{ key: '4', label: <NavLink to="/login">Ingresar</NavLink> }];
 
   // Menú mobile y desktop lo usan igual, sólo cambia composición
