@@ -15,13 +15,6 @@ export const useHorarios = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Enviando parámetros al backend:", {
-        origen,
-        destino,
-        tipo_dia,
-        hora_actual,
-      });
-
       const { data } = await api.get("/horarios-directos/", {
         params: {
           origen,
@@ -31,7 +24,6 @@ export const useHorarios = () => {
         },
       });
 
-      console.log("Respuesta del backend:", data);
       return data;
     } catch (error) {
       const errorMessage =
