@@ -13,8 +13,16 @@ import {
   Switch,
   TimePicker,
   Alert,
+  Space,
+  Tag,
+  Divider,
 } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   validateHorarioTimes,
@@ -25,31 +33,47 @@ import {
   crossesMidnight,
 } from "../../utils/validation";
 import toast from "react-hot-toast";
+import CascadeDeleteModal from "../common/CascadeDeleteModal";
 
-const AdminTable = ({
-  title,
-  endpoint,
-  columns,
-  formFields,
-}) => {
-  const { getAll, create, update, remove, loading } = useCrud(endpoint);
+const AdminTable = ({ title, endpoint, columns, formFields }) => {
+  const { getAll, create, update, remove, bulkRemove, loading } =
+    useCrud(endpoint);
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [validationAlert, setValidationAlert] = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [filterMode, setFilterMode] = useState("replace");
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [cascadeModal, setCascadeModal] = useState(null);
+
   const { handleSubmit, control, reset, setValue, watch } = useForm();
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   const PAGE_SIZE = 10;
 
+  const activeBtn = {
+    backgroundColor: "#0c5392",
+    color: "#fff",
+    borderColor: "#0c5392",
+  };
+
+  const inactiveBtn = {
+    backgroundColor: "#fff",
+    color: "#0c5392",
+    borderColor: "#0c5392",
+  };
+
   const flattenData = (arr) => {
     return arr.map((item) => {
       const flat = { ...item };
-      if (item.linea && item.linea.nombre)
-        flat.linea_nombre = item.linea.nombre;
-      if (item.recorrido && item.recorrido.origen && item.recorrido.destino)
-        flat.recorrido_label = `${item.recorrido.origen} — ${item.recorrido.destino}`;
+
+      // Asegurar label del recorrido
+      if (item.origen && item.destino) {
+        flat.recorrido_label = `${item.origen} — ${item.destino}`;
+      }
+
       return flat;
     });
   };
@@ -232,13 +256,111 @@ const AdminTable = ({
 
   const handleDelete = async (id) => {
     try {
-      await remove(id);
+      await remove(id, false);
       toast.success(`${title} eliminado`);
       fetchData();
+      setSelectedRowKeys([]);
     } catch (error) {
+      const errorData = error.response?.data?.detail;
+
+      if (error.response?.status === 409 && typeof errorData === "object") {
+        const entityType = endpoint === "lineas" ? "linea" : "recorrido";
+
+        setCascadeModal({
+          conflictData: errorData,
+          entityType,
+          id,
+        });
+        return;
+      }
+
       const errorDetail = error.response?.data?.detail || error.message;
       toast.error(errorDetail, { duration: 6000 });
       console.error("Error al eliminar:", error.response?.data);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      toast.error("Seleccione al menos un registro.");
+      return;
+    }
+    setBulkModalOpen(true);
+  };
+
+  const handleQuickSelect = (filterType, filterValue = null) => {
+    let filtered = [];
+
+    switch (filterType) {
+      // Filtros por tipo de día
+      case "habil":
+        filtered = data.filter((h) => h.tipo_dia === "habil").map((h) => h.id);
+        break;
+      case "sabado":
+        filtered = data.filter((h) => h.tipo_dia === "sábado").map((h) => h.id);
+        break;
+      case "domingo":
+        filtered = data
+          .filter((h) => h.tipo_dia === "domingo")
+          .map((h) => h.id);
+        break;
+
+      case "directos":
+        filtered = data.filter((h) => h.directo === true).map((h) => h.id);
+        break;
+
+      case "linea":
+        filtered = data
+          .filter((h) => h.linea_nombre === filterValue)
+          .map((h) => h.id);
+        break;
+
+      case "recorrido": {
+        const recorridoId = filterValue;
+        filtered = data
+          .filter((h) => h.recorrido_id === recorridoId)
+          .map((h) => h.id);
+        break;
+      }
+
+      // Acciones generales
+      case "all":
+        filtered = data.map((h) => h.id);
+        break;
+      case "clear":
+        filtered = [];
+        break;
+
+      default:
+        filtered = [];
+    }
+
+    if (
+      filterMode === "add" &&
+      filterType !== "all" &&
+      filterType !== "clear"
+    ) {
+      const combined = [...new Set([...selectedRowKeys, ...filtered])];
+      setSelectedRowKeys(combined);
+      toast.success(
+        `+${filtered.length} registros añadidos a la selección (Total: ${combined.length})`
+      );
+    } else {
+      setSelectedRowKeys(filtered);
+    }
+
+    if (filtered.length > 0) {
+      toast.success(
+        `${filtered.length} ${
+          filtered.length === 1
+            ? "registro seleccionado"
+            : "registros seleccionados"
+        }`
+      );
+    } else if (filterType === "clear") {
+      toast.success("Selección limpiada");
+    } else {
+      toast.error("No se encontraron registros con ese filtro");
     }
   };
 
@@ -250,7 +372,7 @@ const AdminTable = ({
       render: (_, record) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
-            <EditOutlined style={{  color: '#0c5392', fontSize: '16px' }} />
+            <EditOutlined style={{ color: "#0c5392", fontSize: "16px" }} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
@@ -269,7 +391,7 @@ const AdminTable = ({
             okButtonProps={{ danger: true }}
           >
             <Button type="link" danger>
-              <DeleteOutlined style={{ fontSize: '16px' }} />
+              <DeleteOutlined style={{ fontSize: "16px" }} />
             </Button>
           </Popconfirm>
         </>
@@ -277,11 +399,30 @@ const AdminTable = ({
     },
   ];
 
-  const tablePagination = data.length > PAGE_SIZE ? {
-    pageSize: PAGE_SIZE,
-    showSizeChanger: false,
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`,
-  } : false;
+  const tablePagination =
+    data.length > PAGE_SIZE
+      ? {
+          pageSize: PAGE_SIZE,
+          showSizeChanger: false,
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} de ${total} registros`,
+        }
+      : false;
+
+  const rowSelection =
+    endpoint === "horarios"
+      ? {
+          selectedRowKeys,
+          onChange: (newSelectedRowKeys) => {
+            setSelectedRowKeys(newSelectedRowKeys);
+          },
+          selections: [
+            Table.SELECTION_ALL,
+            Table.SELECTION_INVERT,
+            Table.SELECTION_NONE,
+          ],
+        }
+      : undefined;
 
   const renderFormField = (field, inputField) => {
     switch (field.type) {
@@ -332,6 +473,32 @@ const AdminTable = ({
     </div>
   );
 
+  const getUniqueLineas = () => {
+    const lineas = [
+      ...new Set(data.map((h) => h.linea_nombre).filter(Boolean)),
+    ];
+    return lineas.sort();
+  };
+
+  const getUniqueRecorridos = () => {
+    const recorridosMap = new Map();
+
+    data.forEach((h) => {
+      if (h.recorrido_id && h.origen && h.destino) {
+        const id = h.recorrido_id;
+        const label = `${h.origen} - ${h.destino}`;
+
+        if (!recorridosMap.has(id)) {
+          recorridosMap.set(id, { key: id, label });
+        }
+      }
+    });
+
+    return Array.from(recorridosMap.values()).sort((a, b) =>
+      a.label.localeCompare(b.label)
+    );
+  };
+
   return (
     <>
       <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
@@ -346,62 +513,199 @@ const AdminTable = ({
           Nuevo {title}
         </Button>
       </div>
+      {endpoint === "horarios" && (
+        <>
+          {selectedRowKeys.length > 0 && (
+            <Alert
+              message={
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span>
+                    <Tag color="#0c5392">{selectedRowKeys.length}</Tag>
+                    {selectedRowKeys.length === 1
+                      ? " registro seleccionado"
+                      : " registros seleccionados"}
+                  </span>
+                  <Button danger size="small" onClick={handleBulkDelete}>
+                    Eliminar seleccionados
+                  </Button>
+                </div>
+              }
+              type="info"
+              closable
+              onClose={() => setSelectedRowKeys([])}
+              className="mb-3"
+            />
+          )}
 
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-300">
+            <p className="text-sm font-semibold text-gray-700">
+              Selección rápida
+            </p>
+            <Space size="small">
+              <span className="text-xs text-gray-600">Modo:</span>
+              <Button
+                size="small"
+                style={filterMode === "replace" ? activeBtn : inactiveBtn}
+                onClick={() => setFilterMode("replace")}
+              >
+                Reemplazar
+              </Button>
+              <Button
+                size="small"
+                style={filterMode === "add" ? activeBtn : inactiveBtn}
+                onClick={() => setFilterMode("add")}
+              >
+                Agregar
+              </Button>
+            </Space>
+          </div>
+
+          <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Por tipo de día:
+                </p>
+                <Space wrap size="small">
+                  <Button
+                    size="small"
+                    onClick={() => handleQuickSelect("habil")}
+                  >
+                    Días hábiles
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => handleQuickSelect("sabado")}
+                  >
+                    Sábados
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => handleQuickSelect("domingo")}
+                  >
+                    Domingos
+                  </Button>
+                </Space>
+              </div>
+
+              <Divider className="my-2" />
+
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Por línea:
+                </p>
+                <Space wrap size="small">
+                  {getUniqueLineas().map((linea) => (
+                    <Button
+                      key={linea}
+                      size="small"
+                      onClick={() => handleQuickSelect("linea", linea)}
+                    >
+                      {linea}
+                    </Button>
+                  ))}
+                </Space>
+              </div>
+
+              <Divider className="my-2" />
+
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Por recorrido:
+                </p>
+                <Space wrap size="small">
+                  {getUniqueRecorridos().map((recorrido) => (
+                    <Button
+                      key={recorrido.key}
+                      size="small"
+                      className="text-xs"
+                      onClick={() =>
+                        handleQuickSelect("recorrido", recorrido.key)
+                      }
+                    >
+                      {recorrido.label}
+                    </Button>
+                  ))}
+                </Space>
+              </div>
+            </div>
+
+            <Divider className="my-2" />
+
+            <p className="text-sm font-semibold text-gray-700 mb-2">
+              Acciones:
+            </p>
+            <Space wrap size="small">
+              <Button
+                size="small"
+                style={{ backgroundColor: "#0c5392", color: "#fff" }}
+                onClick={() => handleQuickSelect("all")}
+              >
+                Seleccionar todos
+              </Button>
+              <Button size="small" onClick={() => handleQuickSelect("clear")}>
+                Limpiar selección
+              </Button>
+            </Space>
+          </div>
+        </>
+      )}
       {isMobile && endpoint === "horarios" ? (
         <div className="space-y-2">
-    {data.map((item) => (
-      <div
-        key={item.id}
-        className="border border-gray-300 rounded-lg p-3 shadow-sm bg-white transition"
-      >
-        {/* Header: título y ID */}
-        <div className="flex justify-between items-start mb-2">
-          <p className="font-semibold text-gray-800">
-            {item.origen} → {item.destino}
-          </p>
-          <p className="text-sm text-gray-500">#{item.id}</p>
+          {data.map((item) => (
+            <div
+              key={item.id}
+              className="border border-gray-300 rounded-lg p-3 shadow-sm bg-white transition"
+            >
+              {/* Header: título y ID */}
+              <div className="flex justify-between items-start mb-2">
+                <p className="font-semibold text-gray-800">
+                  {item.origen} → {item.destino}
+                </p>
+                <p className="text-sm text-gray-500">#{item.id}</p>
+              </div>
+
+              {/* Detalle principal */}
+              <p className="text-gray-600">
+                {item.hora_salida} — {item.hora_llegada}
+              </p>
+              <p className="text-gray-500 text-sm">{item.tipo_dia}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Línea: {item.linea_nombre || "-"}
+              </p>
+
+              {/* 🔸 Acciones */}
+              <div className="flex justify-end gap-2 mt-3">
+                <Button
+                  size="small"
+                  onClick={() => handleOpen(item)} // editar
+                  style={{ backgroundColor: "#0c5392", color: "#fff" }}
+                >
+                  Editar
+                </Button>
+
+                <Popconfirm
+                  title="¿Eliminar este registro?"
+                  description="Esta acción no se puede deshacer."
+                  okText="Sí, eliminar"
+                  cancelText="Cancelar"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => handleDelete(item.id)}
+                >
+                  <Button size="small" danger>
+                    Eliminar
+                  </Button>
+                </Popconfirm>
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Detalle principal */}
-        <p className="text-gray-600">
-          {item.hora_salida} — {item.hora_llegada}
-        </p>
-        <p className="text-gray-500 text-sm">{item.tipo_dia}</p>
-        <p className="text-xs text-gray-400 mt-1">
-          Línea: {item.linea_nombre || '-'}
-        </p>
-
-        {/* 🔸 Acciones */}
-        <div className="flex justify-end gap-2 mt-3">
-          <Button
-            size="small"
-            onClick={() => handleOpen(item)} // editar
-            style={{ backgroundColor: "#0c5392", color: "#fff" }}
-          >
-            Editar
-          </Button>
-
-          <Popconfirm
-            title="¿Eliminar este registro?"
-            description="Esta acción no se puede deshacer."
-            okText="Sí, eliminar"
-            cancelText="Cancelar"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => handleDelete(item.id)}
-          >
-            <Button size="small" danger>
-              Eliminar
-            </Button>
-          </Popconfirm>
-        </div>
-      </div>
-    ))}
-  </div>
       ) : (
         // 🔹 Vista normal (desktop)
         <div className="overflow-x-auto rounded-lg bg-white shadow border border-gray-200 p-0 sm:p-2 w-full max-w-full">
           <div className="min-w-[350px] w-full max-w-full">
             <Table
+              rowSelection={rowSelection}
               columns={tableColumns}
               dataSource={data}
               rowKey="id"
@@ -413,7 +717,6 @@ const AdminTable = ({
           </div>
         </div>
       )}
-
       <Modal
         title={editing ? `Editar ${title}` : `Nuevo ${title}`}
         open={open}
@@ -421,7 +724,10 @@ const AdminTable = ({
           setOpen(false);
           setValidationAlert(null);
         }}
+        cancelText="Cancelar"
         onOk={handleSubmit(onSubmit)}
+        okText={editing ? "Guardar cambios" : "Crear"}
+        okButtonProps={{ style: { backgroundColor: "#0c5392", color: "#fff" } }}
         destroyOnHidden
       >
         {/* ... (sin cambios en el formulario del modal) */}
@@ -455,6 +761,74 @@ const AdminTable = ({
           ))}
         </form>
       </Modal>
+      <Modal
+        open={bulkModalOpen}
+        onCancel={() => setBulkModalOpen(false)}
+        footer={null}
+        width={500}
+        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}s?`}
+      >
+        <div className="space-y-4 mt-3">
+          <Alert
+            type="warning"
+            showIcon
+            message={`Total: ${selectedRowKeys.length} registros seleccionados`}
+          />
+
+          <p className="text-red-600 font-semibold">
+            Esta acción no se puede deshacer.
+          </p>
+
+          <div className="flex justify-end gap-2 mt-5">
+            <Button onClick={() => setBulkModalOpen(false)}>Cancelar</Button>
+
+            <Button
+              danger
+              type="primary"
+              size="large"
+              onClick={async () => {
+                try {
+                  await bulkRemove(selectedRowKeys);
+                  toast.success(
+                    `${selectedRowKeys.length} registros eliminados correctamente.`
+                  );
+                  setSelectedRowKeys([]);
+                  fetchData();
+                  setBulkModalOpen(false);
+                } catch (error) {
+                  const errorDetail =
+                    error.response?.data?.detail || error.message;
+                  toast.error(`Error al eliminar: ${errorDetail}`, {
+                    duration: 6000,
+                  });
+                }
+              }}
+            >
+              Sí, eliminar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {cascadeModal && (
+        <CascadeDeleteModal
+          conflictData={cascadeModal.conflictData}
+          entityType={cascadeModal.entityType}
+          onConfirm={async () => {
+            try {
+              await remove(cascadeModal.id, true);
+              toast.success(`${title} y datos relacionados eliminados.`);
+              fetchData();
+              setSelectedRowKeys([]);
+            } catch (err) {
+              const detail = err.response?.data?.detail || err.message;
+              toast.error(`Error al eliminar: ${detail}`);
+            } finally {
+              setCascadeModal(null);
+            }
+          }}
+          onCancel={() => setCascadeModal(null)}
+        />
+      )}
     </>
   );
 };

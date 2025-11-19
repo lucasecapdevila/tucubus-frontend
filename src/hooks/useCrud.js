@@ -79,11 +79,16 @@ export const useCrud = (endpoint) => {
   );
 
   const remove = useCallback(
-    async (id) => {
+    async (id, force = false) => {
       try {
         setLoading(true);
         setError(null);
-        const { data } = await api.delete(`/${endpoint}/${id}`);
+
+        const url = force
+          ? `/${endpoint}/${id}?force=true`
+          : `/${endpoint}/${id}`;
+
+        const { data } = await api.delete(url);
         return data;
       } catch (error) {
         setError(error.message);
@@ -96,5 +101,46 @@ export const useCrud = (endpoint) => {
     [endpoint]
   );
 
-  return { loading, error, getAll, getByID, create, update, remove };
+  const bulkRemove = useCallback(
+    async (ids) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+          throw new Error("Debe proporcionar al menos un ID para eliminar.");
+        }
+
+        if (ids.length > 500) {
+          throw new Error(
+            "No se pueden eliminar más de 500 registros a la vez."
+          );
+        }
+
+        const { data } = await api.post(`/${endpoint}/bulk-delete`, { ids });
+        return data;
+      } catch (error) {
+        setError(error.message);
+        console.error(
+          `Error al eliminar registros múltiples de ${endpoint}:`,
+          error
+        );
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [endpoint]
+  );
+
+  return {
+    loading,
+    error,
+    getAll,
+    getByID,
+    create,
+    update,
+    remove,
+    bulkRemove,
+  };
 };
