@@ -356,7 +356,6 @@ const inactiveBtn = {
           .map((h) => h.id);
         break;
 
-      // ✨ NUEVO: Filtro por recorrido
       case "recorrido": {
         const recorridoId = filterValue;
         filtered = data
@@ -769,7 +768,10 @@ const inactiveBtn = {
           setOpen(false);
           setValidationAlert(null);
         }}
+        cancelText="Cancelar"
         onOk={handleSubmit(onSubmit)}
+        okText={editing ? "Guardar cambios" : "Crear"}
+        okButtonProps={{ style: { backgroundColor: "#0c5392", color: "#fff" } }}
         destroyOnHidden
       >
         {/* ... (sin cambios en el formulario del modal) */}
