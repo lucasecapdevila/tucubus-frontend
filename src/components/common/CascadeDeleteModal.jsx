@@ -1,93 +1,118 @@
-import { Alert, Divider, Modal } from "antd"
-import { ArrowRightOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import Paragraph from "antd/es/skeleton/Paragraph";
+import { Alert, Button, Divider, Modal, Typography } from "antd";
+import { ArrowRightOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 
-const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = 'linea' }) => {
-  const isLinea = entityType === 'linea'
+const { Text, Paragraph } = Typography;
 
-  Modal.confirm({
-    title: (
-      <div className="flex items-cener gap-2">
-        <ExclamationCircleOutlined style={{ color: '#faad14', fontSize: 22 }} />
-        <span>Eliminación masiva</span>
-      </div>
-    ),
-    width: 600,
-    icon: null,
-    maskClosable: false,
-    content: (
-      <div className="space-y-4 mt-4">
-        <Alert 
+const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "linea" }) => {
+  const isLinea = entityType === "linea";
+
+  return (
+    <Modal
+      open={true}
+      onCancel={onCancel}
+      footer={null}
+      width={600}
+      title={
+        <div className="flex items-center gap-2">
+          <ExclamationCircleOutlined style={{ color: "#faad14", fontSize: 22 }} />
+          <span>Eliminación masiva</span>
+        </div>
+      }
+      maskClosable={false}
+    >
+      <div className="space-y-4 mt-2">
+        <Alert
           type="warning"
           showIcon
-          message="Esta acción eliminará de forma permanente los registros seleccionados y todos los datos relacionados. Esta operación no se puede deshacer. ¿Desea continuar?"
+          message="Esta acción eliminará de forma permanente los datos relacionados."
           description={
             <div className="mt-2 space-y-1">
               {isLinea && (
                 <>
-                  <Text strong className='block'>{conflictData.recorridos_count} recorridos</Text>
-                  <Text strong className='block'>{conflictData.horarios_count} horarios</Text>
+                  <Text strong className="block">
+                    {conflictData.recorridos_count} recorridos
+                  </Text>
+                  <Text strong className="block">
+                    {conflictData.horarios_count} horarios
+                  </Text>
                 </>
               )}
               {!isLinea && (
-                <Text strong className='block'>{conflictData.horarios_count} horarios</Text>
+                <Text strong className="block">
+                  {conflictData.horarios_count} horarios
+                </Text>
               )}
             </div>
           }
         />
 
-        {/* Recorridos afectados por lineas */}
-        {isLinea && conflictData.recorridos && conflictData.recorridos.length > 0 && (
+        {/* Recorridos afectados */}
+        {isLinea && conflictData.recorridos?.length > 0 && (
           <>
-            <Divider className="my-3" />
-            <div className="max-h-60 overflow-y-auto border border-gray-200 rounded p-3 bg-gray-50">
-              <Paragraph strong className="mb-2 text-gray-700">Recorridos que serán eliminados:</Paragraph>
-              {conflictData.recorridos.map((recorrido) => (
-                <Paragraph key={recorrido.id} className="text-sm text-gray-600 mb-1">
-                  <Text code>ID {recorrido.id}</Text> - {recorrido.origen} <ArrowRightOutlined /> {recorrido.destino}
+            <Divider />
+
+            <div className="max-h-60 overflow-y-auto border rounded p-3 bg-gray-50">
+              <Paragraph strong className="mb-2">
+                Recorridos que serán eliminados:
+              </Paragraph>
+
+              {conflictData.recorridos.map((rec) => (
+                <Paragraph key={rec.id} className="text-sm mb-1">
+                  <Text code>ID {rec.id}</Text> – {rec.origen}{" "}
+                  <ArrowRightOutlined /> {rec.destino}
                 </Paragraph>
               ))}
             </div>
           </>
         )}
-        
-        {/* Preview de horarios para recorridos */}
-        {!isLinea && conflictData.horarios_preview && conflictData.horarios_preview.length > 0 && (
+
+        {/* Preview horarios */}
+        {!isLinea && conflictData.horarios_preview?.length > 0 && (
           <>
-            <Divider className="my-3" />
-            <div className="max-h-60 overflow-y-auto border border-gray-200 rounded p-3 bg-gray-50">
-              <Paragraph strong className="mb-2 text-gray-700">Primeros 10 horarios que serán eliminados:</Paragraph>
+            <Divider />
+
+            <div className="max-h-60 overflow-y-auto border rounded p-3 bg-gray-50">
+              <Paragraph strong className="mb-2">
+                Primeros 10 horarios que serán eliminados:
+              </Paragraph>
+
               <div className="flex flex-wrap gap-1">
                 {conflictData.horarios_preview.map((id) => (
-                  <Text key={id} code className='text-xs'>ID {id}</Text>
+                  <Text key={id} code className="text-xs">
+                    ID {id}
+                  </Text>
                 ))}
               </div>
-              {conflictData.horarios_count > conflictData.horarios_preview.length && (
-                <Paragraph className="text-xs text-gray-500 mt-2 mb-0">... y {conflictData.horarios_count - conflictData.horarios_preview.length} horarios más</Paragraph>
+
+              {conflictData.horarios_count >
+                conflictData.horarios_preview.length && (
+                <Paragraph className="text-xs text-gray-500 mt-2 mb-0">
+                  ... y {conflictData.horarios_count - conflictData.horarios_preview.length} más
+                </Paragraph>
               )}
             </div>
           </>
         )}
 
-        <Alert 
-          message="Esta acción no se puede deshacer."
+        <Alert
           type="error"
           showIcon
+          message="Esta acción no se puede deshacer."
           className="mt-3"
         />
+
+        <div className="flex justify-end gap-2 mt-5">
+          <Button className="ant-btn" onClick={onCancel}>
+            Cancelar
+          </Button>
+
+          <Button danger type="primary" onClick={onConfirm}>
+            Confirmar eliminación
+          </Button>
+        </div>
       </div>
-    ),
-    okText:"Confirmar eliminación",
-    cancelText:"Cancelar",
-    okButtonProps:{ danger: true, size: 'large' },
-    cancelButtonProps:{ size: 'large' },
-    onOk: onConfirm,
-    onCancel: onCancel,
-  });
+    </Modal>
+  );
+};
 
-  return (
-    <div>CascadeDeleteModal</div>
-  )
-}
-
-export default CascadeDeleteModal
+export default CascadeDeleteModal;

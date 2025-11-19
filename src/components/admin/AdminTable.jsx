@@ -44,6 +44,8 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const [validationAlert, setValidationAlert] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [filterMode, setFilterMode] = useState("replace");
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [cascadeModal, setCascadeModal] = useState(null);
 
   const { handleSubmit, control, reset, setValue, watch } = useForm();
 
@@ -52,16 +54,16 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const PAGE_SIZE = 10;
 
   const activeBtn = {
-  backgroundColor: "#0c5392",
-  color: "#fff",
-  borderColor: "#0c5392",
-};
+    backgroundColor: "#0c5392",
+    color: "#fff",
+    borderColor: "#0c5392",
+  };
 
-const inactiveBtn = {
-  backgroundColor: "#fff",
-  color: "#0c5392",
-  borderColor: "#0c5392",
-};
+  const inactiveBtn = {
+    backgroundColor: "#fff",
+    color: "#0c5392",
+    borderColor: "#0c5392",
+  };
 
   const flattenData = (arr) => {
     return arr.map((item) => {
@@ -264,22 +266,11 @@ const inactiveBtn = {
       if (error.response?.status === 409 && typeof errorData === "object") {
         const entityType = endpoint === "lineas" ? "linea" : "recorrido";
 
-        <CascadeDeleteModal
-          conflictData={errorData}
-          entityType={entityType}
-          onConfirm={async () => {
-            try {
-              await remove(id, true);
-              toast.success(`${title} y datos relacionados eliminados.`);
-              fetchData();
-              setSelectedRowKeys([]);
-            } catch (err) {
-              const detail = err.response?.data?.detail || err.message;
-              toast.error(`Error al eliminar: ${detail}`);
-            }
-          }}
-          onCancel={() => {}}
-        />;
+        setCascadeModal({
+          conflictData: errorData,
+          entityType,
+          id,
+        });
         return;
       }
 
@@ -294,39 +285,7 @@ const inactiveBtn = {
       toast.error("Seleccione al menos un registro.");
       return;
     }
-
-    Modal.confirm({
-      title: `Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}s?`,
-      width: 500,
-      content: (
-        <div className="space-y-3 mt-3">
-          <Alert
-            type="warning"
-            showIcon
-            message={`Total: ${selectedRowKeys.length} registros seleccionados`}
-          />
-          <p className="text-red-600 font-semibold">
-            Esta acción no se puede deshacer.
-          </p>
-        </div>
-      ),
-      okText: "Sí, eliminar",
-      cancelText: "Cancelar",
-      okButtonProps: { danger: true, size: "large" },
-      onOk: async () => {
-        try {
-          await bulkRemove(selectedRowKeys);
-          toast.success(
-            `${selectedRowKeys.length} registros eliminados correctamente.`
-          );
-          setSelectedRowKeys([]);
-          fetchData();
-        } catch (error) {
-          const errorDetail = error.response?.data?.detail || error.message;
-          toast.error(`Error al eliminar: ${errorDetail}`, { duration: 6000 });
-        }
-      },
-    });
+    setBulkModalOpen(true);
   };
 
   const handleQuickSelect = (filterType, filterValue = null) => {
@@ -554,7 +513,6 @@ const inactiveBtn = {
           Nuevo {title}
         </Button>
       </div>
-
       {endpoint === "horarios" && (
         <>
           {selectedRowKeys.length > 0 && (
@@ -692,7 +650,6 @@ const inactiveBtn = {
           </div>
         </>
       )}
-
       {isMobile && endpoint === "horarios" ? (
         <div className="space-y-2">
           {data.map((item) => (
@@ -760,7 +717,6 @@ const inactiveBtn = {
           </div>
         </div>
       )}
-
       <Modal
         title={editing ? `Editar ${title}` : `Nuevo ${title}`}
         open={open}
@@ -805,6 +761,74 @@ const inactiveBtn = {
           ))}
         </form>
       </Modal>
+      <Modal
+        open={bulkModalOpen}
+        onCancel={() => setBulkModalOpen(false)}
+        footer={null}
+        width={500}
+        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}s?`}
+      >
+        <div className="space-y-4 mt-3">
+          <Alert
+            type="warning"
+            showIcon
+            message={`Total: ${selectedRowKeys.length} registros seleccionados`}
+          />
+
+          <p className="text-red-600 font-semibold">
+            Esta acción no se puede deshacer.
+          </p>
+
+          <div className="flex justify-end gap-2 mt-5">
+            <Button onClick={() => setBulkModalOpen(false)}>Cancelar</Button>
+
+            <Button
+              danger
+              type="primary"
+              size="large"
+              onClick={async () => {
+                try {
+                  await bulkRemove(selectedRowKeys);
+                  toast.success(
+                    `${selectedRowKeys.length} registros eliminados correctamente.`
+                  );
+                  setSelectedRowKeys([]);
+                  fetchData();
+                  setBulkModalOpen(false);
+                } catch (error) {
+                  const errorDetail =
+                    error.response?.data?.detail || error.message;
+                  toast.error(`Error al eliminar: ${errorDetail}`, {
+                    duration: 6000,
+                  });
+                }
+              }}
+            >
+              Sí, eliminar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {cascadeModal && (
+        <CascadeDeleteModal
+          conflictData={cascadeModal.conflictData}
+          entityType={cascadeModal.entityType}
+          onConfirm={async () => {
+            try {
+              await remove(cascadeModal.id, true);
+              toast.success(`${title} y datos relacionados eliminados.`);
+              fetchData();
+              setSelectedRowKeys([]);
+            } catch (err) {
+              const detail = err.response?.data?.detail || err.message;
+              toast.error(`Error al eliminar: ${detail}`);
+            } finally {
+              setCascadeModal(null);
+            }
+          }}
+          onCancel={() => setCascadeModal(null)}
+        />
+      )}
     </>
   );
 };
