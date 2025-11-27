@@ -3,7 +3,7 @@ import { useMediaQuery } from "react-responsive";
 import { FadeLoader } from "react-spinners";
 import { useCrud } from "../../hooks/useCrud";
 import { Controller } from "react-hook-form";
-import { useFormValidation } from "../../hooks/features";
+import { useFormValidation, useBulkSelection } from "../../hooks/features";
 import {
   Button,
   Input,
@@ -34,8 +34,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [filterMode, setFilterMode] = useState("replace");
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [cascadeModal, setCascadeModal] = useState(null);
 
@@ -49,6 +47,18 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     validateBeforeSubmit,
     clearValidation,
   } = useFormValidation(endpoint);
+
+  const {
+  selectedRowKeys,
+  setSelectedRowKeys,
+  filterMode,
+  setFilterMode,
+  handleQuickSelect,
+  getUniqueLines,
+  getUniqueRoutes,
+  clearSelection,
+  selectedCount,
+} = useBulkSelection(data, endpoint);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -141,7 +151,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       await remove(id, false);
       toast.success(`${title} eliminado`);
       fetchData();
-      setSelectedRowKeys([]);
+      clearSelection();
     } catch (error) {
       const errorData = error.response?.data?.detail;
 
@@ -168,82 +178,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       return;
     }
     setBulkModalOpen(true);
-  };
-
-  const handleQuickSelect = (filterType, filterValue = null) => {
-    let filtered = [];
-
-    switch (filterType) {
-      // Filtros por tipo de día
-      case "habil":
-        filtered = data.filter((h) => h.tipo_dia === "habil").map((h) => h.id);
-        break;
-      case "sabado":
-        filtered = data.filter((h) => h.tipo_dia === "sábado").map((h) => h.id);
-        break;
-      case "domingo":
-        filtered = data
-          .filter((h) => h.tipo_dia === "domingo")
-          .map((h) => h.id);
-        break;
-
-      case "directos":
-        filtered = data.filter((h) => h.directo === true).map((h) => h.id);
-        break;
-
-      case "linea":
-        filtered = data
-          .filter((h) => h.linea_nombre === filterValue)
-          .map((h) => h.id);
-        break;
-
-      case "recorrido": {
-        const recorridoId = filterValue;
-        filtered = data
-          .filter((h) => h.recorrido_id === recorridoId)
-          .map((h) => h.id);
-        break;
-      }
-
-      // Acciones generales
-      case "all":
-        filtered = data.map((h) => h.id);
-        break;
-      case "clear":
-        filtered = [];
-        break;
-
-      default:
-        filtered = [];
-    }
-
-    if (
-      filterMode === "add" &&
-      filterType !== "all" &&
-      filterType !== "clear"
-    ) {
-      const combined = [...new Set([...selectedRowKeys, ...filtered])];
-      setSelectedRowKeys(combined);
-      toast.success(
-        `+${filtered.length} registros añadidos a la selección (Total: ${combined.length})`
-      );
-    } else {
-      setSelectedRowKeys(filtered);
-    }
-
-    if (filtered.length > 0) {
-      toast.success(
-        `${filtered.length} ${
-          filtered.length === 1
-            ? "registro seleccionado"
-            : "registros seleccionados"
-        }`
-      );
-    } else if (filterType === "clear") {
-      toast.success("Selección limpiada");
-    } else {
-      toast.error("No se encontraron registros con ese filtro");
-    }
   };
 
   const tableColumns = [
@@ -355,32 +289,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     </div>
   );
 
-  const getUniqueLineas = () => {
-    const lineas = [
-      ...new Set(data.map((h) => h.linea_nombre).filter(Boolean)),
-    ];
-    return lineas.sort();
-  };
-
-  const getUniqueRecorridos = () => {
-    const recorridosMap = new Map();
-
-    data.forEach((h) => {
-      if (h.recorrido_id && h.origen && h.destino) {
-        const id = h.recorrido_id;
-        const label = `${h.origen} - ${h.destino}`;
-
-        if (!recorridosMap.has(id)) {
-          recorridosMap.set(id, { key: id, label });
-        }
-      }
-    });
-
-    return Array.from(recorridosMap.values()).sort((a, b) =>
-      a.label.localeCompare(b.label)
-    );
-  };
-
   return (
     <>
       <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
@@ -402,8 +310,8 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               message={
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span>
-                    <Tag color="#0c5392">{selectedRowKeys.length}</Tag>
-                    {selectedRowKeys.length === 1
+                    <Tag color="#0c5392">{selectedCount}</Tag>
+                    {selectedCount === 1
                       ? " registro seleccionado"
                       : " registros seleccionados"}
                   </span>
@@ -414,8 +322,8 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               }
               type="info"
               closable
-              onClose={() => setSelectedRowKeys([])}
-              className="mb-3"
+              onClose={clearSelection}
+              style={{ margin: "12px 0" }}
             />
           )}
 
@@ -477,7 +385,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                   Por línea:
                 </p>
                 <Space wrap size="small">
-                  {getUniqueLineas().map((linea) => (
+                  {getUniqueLines().map((linea) => (
                     <Button
                       key={linea}
                       size="small"
@@ -496,7 +404,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                   Por recorrido:
                 </p>
                 <Space wrap size="small">
-                  {getUniqueRecorridos().map((recorrido) => (
+                  {getUniqueRoutes().map((recorrido) => (
                     <Button
                       key={recorrido.key}
                       size="small"
@@ -650,13 +558,13 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         onCancel={() => setBulkModalOpen(false)}
         footer={null}
         width={500}
-        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}s?`}
+        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}?`}
       >
         <div className="space-y-4 mt-3">
           <Alert
             type="warning"
             showIcon
-            message={`Total: ${selectedRowKeys.length} registros seleccionados`}
+            message={`Total: ${selectedCount} registros seleccionados`}
           />
 
           <p className="text-red-600 font-semibold">
@@ -669,14 +577,14 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
             <Button
               danger
               type="primary"
-              size="large"
+              size="middle"
               onClick={async () => {
                 try {
                   await bulkRemove(selectedRowKeys);
                   toast.success(
-                    `${selectedRowKeys.length} registros eliminados correctamente.`
+                    `${selectedCount} registros eliminados correctamente.`
                   );
-                  setSelectedRowKeys([]);
+                  clearSelection()
                   fetchData();
                   setBulkModalOpen(false);
                 } catch (error) {
@@ -702,7 +610,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               await remove(cascadeModal.id, true);
               toast.success(`${title} y datos relacionados eliminados.`);
               fetchData();
-              setSelectedRowKeys([]);
+              clearSelection();
             } catch (err) {
               const detail = err.response?.data?.detail || err.message;
               toast.error(`Error al eliminar: ${detail}`);
