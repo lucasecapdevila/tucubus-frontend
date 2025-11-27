@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { FadeLoader } from "react-spinners";
-import { useCrud } from "../../hooks/useCrud";
 import { Controller } from "react-hook-form";
-import { useFormValidation, useBulkSelection } from "../../hooks/features";
+import { useFormValidation, useBulkSelection, useAdminTable } from "../../hooks/features";
 import {
   Button,
   Input,
@@ -29,13 +28,20 @@ import toast from "react-hot-toast";
 import CascadeDeleteModal from "../common/CascadeDeleteModal";
 
 const AdminTable = ({ title, endpoint, columns, formFields }) => {
-  const { getAll, create, update, remove, bulkRemove, loading } =
-    useCrud(endpoint);
-  const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [cascadeModal, setCascadeModal] = useState(null);
+
+  const { 
+    data,
+    loading,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    handleBulkDelete,
+    paginationConfig 
+  } = useAdminTable(endpoint);
 
   const {
     control,
@@ -60,9 +66,8 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   selectedCount,
 } = useBulkSelection(data, endpoint);
 
-  const isMobile = useMediaQuery({ maxWidth: 767 });
 
-  const PAGE_SIZE = 10;
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   const activeBtn = {
     backgroundColor: "#0c5392",
@@ -75,33 +80,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     color: "#0c5392",
     borderColor: "#0c5392",
   };
-
-  const flattenData = (arr) => {
-    return arr.map((item) => {
-      const flat = { ...item };
-
-      // Asegurar label del recorrido
-      if (item.origen && item.destino) {
-        flat.recorrido_label = `${item.origen} — ${item.destino}`;
-      }
-
-      return flat;
-    });
-  };
-
-  const fetchData = async () => {
-    try {
-      const result = await getAll();
-      setData(flattenData(result));
-    } catch (error) {
-      toast.error(`Error al cargar ${title.toLowerCase()}: ${error.message}`);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleOpen = async (record = null) => {
     if (record) {
@@ -126,54 +104,34 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       return;
     }
 
-    try {
-      if (editing) {
-        await update(editing.id, values);
-        toast.success(`${title} actualizado`);
-      } else {
-        await create(values);
-        toast.success(`${title} creado`);
-      }
-
-      fetchData();
+    const result = editing
+      ? await handleUpdate(editing.id, values)
+      : await handleCreate(values);
+    
+    if (result.success) {
       setOpen(false);
       reset();
       clearValidation();
-    } catch (error) {
-      const errorDetail = error.response?.data?.detail || error.message;
-      toast.error(`Error al guardar: ${errorDetail}`);
-      console.error("Error completo:", error.response?.data);
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await remove(id, false);
-      toast.success(`${title} eliminado`);
-      fetchData();
+  const handleDeleteClick = async (id) => {
+    const result = await handleDelete(id, false);
+
+    if (result.conflict) {
+      const entityType = endpoint === "lineas" ? "linea" : "recorrido";
+      setCascadeModal({
+        id,
+        entityType,
+        ...result.conflictData,
+      });
+    } else if (result.success) {
       clearSelection();
-    } catch (error) {
-      const errorData = error.response?.data?.detail;
-
-      if (error.response?.status === 409 && typeof errorData === "object") {
-        const entityType = endpoint === "lineas" ? "linea" : "recorrido";
-
-        setCascadeModal({
-          conflictData: errorData,
-          entityType,
-          id,
-        });
-        return;
-      }
-
-      const errorDetail = error.response?.data?.detail || error.message;
-      toast.error(errorDetail, { duration: 6000 });
-      console.error("Error al eliminar:", error.response?.data);
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedRowKeys.length === 0) {
+  const handleBulkDeleteClick = () => {
+    if (selectedCount === 0) {
       toast.error("Seleccione al menos un registro.");
       return;
     }
@@ -194,14 +152,14 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
             title={`¿Eliminar este ${title.toLowerCase()}?`}
             description={
               endpoint === "lineas"
-                ? "Si contiene recorridos/horarios, no se podrá eliminar"
+                ? "Si contiene recorridos/horarios, estos se perderán."
                 : endpoint === "recorridos"
-                ? "Si contiene horarios, no se podrá eliminar"
+                ? "Si contiene horarios, estos se perderán."
                 : endpoint === "users"
                 ? "No se puede eliminar el último administrador"
                 : "Esta acción no se puede deshacer"
             }
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDeleteClick(record.id)}
             okText="Sí, eliminar"
             cancelText="Cancelar"
             okButtonProps={{ danger: true }}
@@ -214,16 +172,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       ),
     },
   ];
-
-  const tablePagination =
-    data.length > PAGE_SIZE
-      ? {
-          pageSize: PAGE_SIZE,
-          showSizeChanger: false,
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} de ${total} registros`,
-        }
-      : false;
 
   const rowSelection =
     endpoint === "horarios"
@@ -305,7 +253,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       </div>
       {endpoint === "horarios" && (
         <>
-          {selectedRowKeys.length > 0 && (
+          {selectedCount > 0 && (
             <Alert
               message={
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -315,7 +263,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                       ? " registro seleccionado"
                       : " registros seleccionados"}
                   </span>
-                  <Button danger size="small" onClick={handleBulkDelete}>
+                  <Button danger size="small" onClick={handleBulkDeleteClick}>
                     Eliminar seleccionados
                   </Button>
                 </div>
@@ -480,7 +428,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                   okText="Sí, eliminar"
                   cancelText="Cancelar"
                   okButtonProps={{ danger: true }}
-                  onConfirm={() => handleDelete(item.id)}
+                  onConfirm={() => handleDeleteClick(item.id)}
                 >
                   <Button size="small" danger>
                     Eliminar
@@ -500,7 +448,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               dataSource={data}
               rowKey="id"
               loading={{ spinning: loading, indicator: customSpinner }}
-              pagination={tablePagination}
+              pagination={paginationConfig}
               size="large"
               className="w-full max-w-full"
             />
@@ -553,6 +501,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
           ))}
         </form>
       </Modal>
+
       <Modal
         open={bulkModalOpen}
         onCancel={() => setBulkModalOpen(false)}
@@ -579,20 +528,11 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               type="primary"
               size="middle"
               onClick={async () => {
-                try {
-                  await bulkRemove(selectedRowKeys);
-                  toast.success(
-                    `${selectedCount} registros eliminados correctamente.`
-                  );
-                  clearSelection()
-                  fetchData();
+                const result = await handleBulkDelete(selectedRowKeys);
+
+                if (result.success) {
+                  clearSelection();
                   setBulkModalOpen(false);
-                } catch (error) {
-                  const errorDetail =
-                    error.response?.data?.detail || error.message;
-                  toast.error(`Error al eliminar: ${errorDetail}`, {
-                    duration: 6000,
-                  });
                 }
               }}
             >
@@ -603,20 +543,14 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       </Modal>
       {cascadeModal && (
         <CascadeDeleteModal
-          conflictData={cascadeModal.conflictData}
-          entityType={cascadeModal.entityType}
+          data={cascadeModal}
           onConfirm={async () => {
-            try {
-              await remove(cascadeModal.id, true);
-              toast.success(`${title} y datos relacionados eliminados.`);
-              fetchData();
+            const result = await handleDelete(cascadeModal.id, true);
+
+            if (result.success) {
               clearSelection();
-            } catch (err) {
-              const detail = err.response?.data?.detail || err.message;
-              toast.error(`Error al eliminar: ${detail}`);
-            } finally {
-              setCascadeModal(null);
             }
+            setCascadeModal(null);
           }}
           onCancel={() => setCascadeModal(null)}
         />
