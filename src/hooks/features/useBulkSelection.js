@@ -31,7 +31,7 @@ const FILTER_CONFIG = {
   },
 };
 
-const useBulkSelection = (data = []) => {
+const useBulkSelection = (data = [], endpoint) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [filterMode, setFilterMode] = useState("replace");
 
