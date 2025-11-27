@@ -1,5 +1,5 @@
 export const recorridosValidator = {
-  validateRecorrido: (origen, destino) => {
+  validateRoute: (origen, destino) => {
     if (!origen || !destino) {
       return { valid: false, message: "Origen y destino son requeridos." };
     }

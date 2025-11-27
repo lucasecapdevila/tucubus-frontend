@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { VALIDATION_SCHEMAS } from "../../utils/validation/schemas";
 
 const useFormValidation = (entityType, options = {}) => {
@@ -10,9 +10,10 @@ const useFormValidation = (entityType, options = {}) => {
     mode: "onChange",
   });
 
-  const values = watch();
+  const values = useWatch({ control });
   const schema = VALIDATION_SCHEMAS[entityType];
 
+  // Validación en tiempo real
   useEffect(() => {
     if (!schema) return;
 

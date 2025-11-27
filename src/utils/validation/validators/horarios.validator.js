@@ -13,7 +13,7 @@ export const horariosValidator = {
     let llegadaMin = timeToMinutes(horaLlegada);
 
     if (llegadaMin < salidaMin) {
-      llegadaMin += 24 * 60; // Ajuste para llegada al día siguiente
+      llegadaMin += 24 * 60;
     }
 
     const duracion = llegadaMin - salidaMin;
@@ -21,14 +21,14 @@ export const horariosValidator = {
     if (duracion < 5) {
       return {
         valid: false,
-        message: "La duración mínima del viaje es de 5 minutos.",
+        message: "El viaje debe durar al menos 5 minutos.",
       };
     }
 
     if (duracion > 600) {
       return {
         valid: false,
-        message: "La duración máxima del viaje es de 10 horas.",
+        message: "El viaje no puede durar más de 10 horas.",
       };
     }
 

@@ -1,18 +1,18 @@
 import {
   horariosValidator,
-  lineasValidator,
   recorridosValidator,
+  lineasValidator,
 } from "./validators";
 
 export const VALIDATION_SCHEMAS = {
   horarios: {
     crossField: [
       {
-        fields: ["horaSalida", "horaLlegada"],
+        fields: ["hora_salida", "hora_llegada"],
         validator: (values) =>
           horariosValidator.validateTimes(
-            values.horaSalida,
-            values.horaLlegada
+            values.hora_salida,
+            values.hora_llegada
           ),
       },
     ],
@@ -23,7 +23,7 @@ export const VALIDATION_SCHEMAS = {
       {
         fields: ["origen", "destino"],
         validator: (values) =>
-          recorridosValidator.validateRecorrido(values.origen, values.destino),
+          recorridosValidator.validateRoute(values.origen, values.destino),
       },
     ],
   },
