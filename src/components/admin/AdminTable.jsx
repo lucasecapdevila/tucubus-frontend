@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { FadeLoader } from "react-spinners";
 import { useCrud } from "../../hooks/useCrud";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
+import { useFormValidation } from "../../hooks/features";
 import {
   Button,
   Input,
@@ -24,14 +25,6 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import {
-  validateHorarioTimes,
-  validateRecorrido,
-  validateLineaNombre,
-  calculateTripDuration,
-  formatDuration,
-  crossesMidnight,
-} from "../../utils/validation";
 import toast from "react-hot-toast";
 import CascadeDeleteModal from "../common/CascadeDeleteModal";
 
@@ -41,13 +34,21 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [validationAlert, setValidationAlert] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [filterMode, setFilterMode] = useState("replace");
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [cascadeModal, setCascadeModal] = useState(null);
 
-  const { handleSubmit, control, reset, setValue, watch } = useForm();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    validationAlert,
+    isValid,
+    validateBeforeSubmit,
+    clearValidation,
+  } = useFormValidation(endpoint);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -102,139 +103,20 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       setEditing(null);
       reset();
     }
-    setValidationAlert(null);
+    clearValidation();
     setOpen(true);
   };
 
-  // Validación en tiempo real
-  useEffect(() => {
-    if (!open) return;
-
-    const subscription = watch((values) => {
-      // Validación para horarios
-      if (endpoint === "horarios") {
-        const { hora_salida, hora_llegada } = values;
-
-        if (hora_salida && hora_llegada) {
-          const validation = validateHorarioTimes(hora_salida, hora_llegada);
-
-          if (validation.valid) {
-            const duration = calculateTripDuration(hora_salida, hora_llegada);
-            const crosses = crossesMidnight(hora_salida, hora_llegada);
-            const hoursMin = formatDuration(duration);
-
-            setValidationAlert({
-              type: "success",
-              message: `Duración: ${hoursMin}${
-                crosses ? " - Este viaje cruza medianoche" : ""
-              }`,
-            });
-          } else {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-
-      // Validación para recorridos
-      if (endpoint === "recorridos") {
-        const { origen, destino } = values;
-
-        if (origen && destino) {
-          const validation = validateRecorrido(origen, destino);
-
-          if (!validation.valid) {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          } else {
-            setValidationAlert(null);
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-
-      // Validación para líneas
-      if (endpoint === "lineas") {
-        const { nombre } = values;
-
-        if (nombre) {
-          const validation = validateLineaNombre(nombre);
-
-          if (!validation.valid) {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          } else {
-            setValidationAlert(null);
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, open, endpoint]);
-
   const onSubmit = async (values) => {
-    // Prevenir envío si hay alerta de error visible
-    if (validationAlert?.type === "error") {
-      toast.error("Por favor corrija los errores antes de guardar");
+    // Validar antes de enviar
+    const validation = validateBeforeSubmit();
+
+    if (!validation.valid) {
+      toast.error(validation.message);
       return;
     }
 
     try {
-      // Validaciones específicas por endpoint antes de enviar
-      if (endpoint === "horarios") {
-        const timeValidation = validateHorarioTimes(
-          values.hora_salida,
-          values.hora_llegada
-        );
-        if (!timeValidation.valid) {
-          toast.error(timeValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${timeValidation.message}`,
-          });
-          return;
-        }
-      }
-
-      if (endpoint === "recorridos") {
-        const recorridoValidation = validateRecorrido(
-          values.origen,
-          values.destino
-        );
-        if (!recorridoValidation.valid) {
-          toast.error(recorridoValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${recorridoValidation.message}`,
-          });
-          return;
-        }
-      }
-
-      if (endpoint === "lineas") {
-        const lineaValidation = validateLineaNombre(values.nombre);
-        if (!lineaValidation.valid) {
-          toast.error(lineaValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${lineaValidation.message}`,
-          });
-          return;
-        }
-      }
-
       if (editing) {
         await update(editing.id, values);
         toast.success(`${title} actualizado`);
@@ -246,7 +128,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       fetchData();
       setOpen(false);
       reset();
-      setValidationAlert(null);
+      clearValidation();
     } catch (error) {
       const errorDetail = error.response?.data?.detail || error.message;
       toast.error(`Error al guardar: ${errorDetail}`);
@@ -722,15 +604,17 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         open={open}
         onCancel={() => {
           setOpen(false);
-          setValidationAlert(null);
+          clearValidation();
         }}
         cancelText="Cancelar"
         onOk={handleSubmit(onSubmit)}
         okText={editing ? "Guardar cambios" : "Crear"}
-        okButtonProps={{ style: { backgroundColor: "#0c5392", color: "#fff" } }}
+        okButtonProps={{
+          style: { backgroundColor: "#0c5392", color: "#fff" },
+          disabled: !isValid
+        }}
         destroyOnHidden
       >
-        {/* ... (sin cambios en el formulario del modal) */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           {validationAlert && (
             <Alert
