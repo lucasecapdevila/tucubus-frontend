@@ -5,12 +5,15 @@ import { useState } from "react";
 import RutasProtegidas from "./components/routes/RutasProtegidas";
 import RutasAdmin from "./components/routes/RutasAdmin";
 import { Toaster } from "react-hot-toast";
+import { ModalProvider } from "./contexts";
+import { ModalManager } from "./components/layout/ModalManager";
 
 function App() {
   const user = JSON.parse(sessionStorage.getItem('usuarioTucuBus')) || {}
   const [loggedUser, setLoggedUser] = useState(user)
 
   return (
+    <ModalProvider>
     <BrowserRouter>
       <Sidebar loggedUser={loggedUser} setLoggedUser={setLoggedUser} />
       <div className="mx-auto lg:pl-64 grow">
@@ -27,12 +30,13 @@ function App() {
                 <RutasAdmin />
               </RutasProtegidas>
             } />
-
         </Routes>
       </div>
       <Footer />
+      <ModalManager />
       <Toaster position="top-center" reverseOrder={false} />
     </BrowserRouter>
+    </ModalProvider>
   )
 }
 
