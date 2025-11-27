@@ -3,8 +3,9 @@ import { ArrowRightOutlined, ExclamationCircleOutlined } from "@ant-design/icons
 
 const { Text, Paragraph } = Typography;
 
-const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "linea" }) => {
-  const isLinea = entityType === "linea";
+const CascadeDeleteModal = ({ data, onConfirm, onCancel }) => {
+  const conflictData = data?.conflictData || data;
+  const entityType = data?.entityType || "linea";
 
   return (
     <Modal

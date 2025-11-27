@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { FadeLoader } from "react-spinners";
-import { AdminTable } from "../common";
 import { Tabs } from "antd";
 import { useCrud } from "../../hooks/useCrud";
 import { rolesOptions, tipoDiaOptions } from "../../utils/adminPanelOptions";
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import toast from "react-hot-toast";
+import AdminTable from "../admin/AdminTable";
 
 const Admin = () => {
   const [lineasOptions, setLineasOptions] = useState([]);
