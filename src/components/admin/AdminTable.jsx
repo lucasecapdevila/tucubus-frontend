@@ -1,31 +1,33 @@
-import { useState } from "react";
-import { useMediaQuery } from "react-responsive";
-import { FadeLoader } from "react-spinners";
-import { Controller } from "react-hook-form";
-import { useFormValidation, useBulkSelection, useAdminTable } from "../../hooks/features";
+import { useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
+import { FadeLoader } from 'react-spinners';
+import {
+  useFormValidation,
+  useBulkSelection,
+  useAdminTable,
+} from '../../hooks/features';
 import {
   Button,
-  Input,
   Modal,
   Popconfirm,
   Table,
-  Select,
-  Switch,
-  TimePicker,
   Alert,
-  Space,
-  Tag,
-  Divider,
-} from "antd";
+} from 'antd';
 import {
   DeleteOutlined,
   EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
-import toast from "react-hot-toast";
-import CascadeDeleteModal from "../common/CascadeDeleteModal";
+} from '@ant-design/icons';
+
+import { AdminTableHeader } from '../features/admin/AdminTable';
+import {
+  BulkActionBar,
+  FilterModeSelector,
+  QuickFilters,
+} from '../features/admin/BulkActions';
+import { FormField } from '../common/FormField';
+
+import toast from 'react-hot-toast';
+import CascadeDeleteModal from '../common/CascadeDeleteModal';
 
 const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const [open, setOpen] = useState(false);
@@ -33,14 +35,14 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [cascadeModal, setCascadeModal] = useState(null);
 
-  const { 
+  const {
     data,
     loading,
     handleCreate,
     handleUpdate,
     handleDelete,
     handleBulkDelete,
-    paginationConfig 
+    paginationConfig,
   } = useAdminTable(endpoint);
 
   const {
@@ -55,31 +57,18 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   } = useFormValidation(endpoint);
 
   const {
-  selectedRowKeys,
-  setSelectedRowKeys,
-  filterMode,
-  setFilterMode,
-  handleQuickSelect,
-  getUniqueLines,
-  getUniqueRoutes,
-  clearSelection,
-  selectedCount,
-} = useBulkSelection(data, endpoint);
-
+    selectedRowKeys,
+    setSelectedRowKeys,
+    filterMode,
+    setFilterMode,
+    handleQuickSelect,
+    getUniqueLines,
+    getUniqueRoutes,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection(data, endpoint);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
-
-  const activeBtn = {
-    backgroundColor: "#0c5392",
-    color: "#fff",
-    borderColor: "#0c5392",
-  };
-
-  const inactiveBtn = {
-    backgroundColor: "#fff",
-    color: "#0c5392",
-    borderColor: "#0c5392",
-  };
 
   const handleOpen = async (record = null) => {
     if (record) {
@@ -107,7 +96,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     const result = editing
       ? await handleUpdate(editing.id, values)
       : await handleCreate(values);
-    
+
     if (result.success) {
       setOpen(false);
       reset();
@@ -119,7 +108,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     const result = await handleDelete(id, false);
 
     if (result.conflict) {
-      const entityType = endpoint === "lineas" ? "linea" : "recorrido";
+      const entityType = endpoint === 'lineas' ? 'linea' : 'recorrido';
       setCascadeModal({
         id,
         entityType,
@@ -132,7 +121,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
 
   const handleBulkDeleteClick = () => {
     if (selectedCount === 0) {
-      toast.error("Seleccione al menos un registro.");
+      toast.error('Seleccione al menos un registro.');
       return;
     }
     setBulkModalOpen(true);
@@ -141,23 +130,23 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const tableColumns = [
     ...columns,
     {
-      title: "Acciones",
-      align: "center",
+      title: 'Acciones',
+      align: 'center',
       render: (_, record) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
-            <EditOutlined style={{ color: "#0c5392", fontSize: "16px" }} />
+            <EditOutlined style={{ color: '#0c5392', fontSize: '16px' }} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
             description={
-              endpoint === "lineas"
-                ? "Si contiene recorridos/horarios, estos se perderán."
-                : endpoint === "recorridos"
-                ? "Si contiene horarios, estos se perderán."
-                : endpoint === "users"
-                ? "No se puede eliminar el último administrador"
-                : "Esta acción no se puede deshacer"
+              endpoint === 'lineas'
+                ? 'Si contiene recorridos/horarios, estos se perderán.'
+                : endpoint === 'recorridos'
+                  ? 'Si contiene horarios, estos se perderán.'
+                  : endpoint === 'users'
+                    ? 'No se puede eliminar el último administrador'
+                    : 'Esta acción no se puede deshacer'
             }
             onConfirm={() => handleDeleteClick(record.id)}
             okText="Sí, eliminar"
@@ -165,7 +154,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
             okButtonProps={{ danger: true }}
           >
             <Button type="link" danger>
-              <DeleteOutlined style={{ fontSize: "16px" }} />
+              <DeleteOutlined style={{ fontSize: '16px' }} />
             </Button>
           </Popconfirm>
         </>
@@ -174,7 +163,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   ];
 
   const rowSelection =
-    endpoint === "horarios"
+    endpoint === 'horarios'
       ? {
           selectedRowKeys,
           onChange: (newSelectedRowKeys) => {
@@ -188,49 +177,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         }
       : undefined;
 
-  const renderFormField = (field, inputField) => {
-    switch (field.type) {
-      case "select":
-        return (
-          <Select
-            className="w-full"
-            value={inputField.value !== undefined ? inputField.value : null}
-            onChange={inputField.onChange}
-            options={field.options || []}
-            placeholder={`Seleccione ${field.label.toLowerCase()}`}
-          />
-        );
-      case "switch":
-        return (
-          <Switch
-            checked={!!inputField.value}
-            onChange={(val) => inputField.onChange(val)}
-          />
-        );
-      case "time":
-        return (
-          <TimePicker
-            format="HH:mm"
-            className="w-full"
-            value={inputField.value ? dayjs(inputField.value, "HH:mm") : null}
-            onChange={(time) => {
-              if (time) {
-                const formatted = time.format("HH:mm");
-                inputField.onChange(formatted);
-              } else {
-                inputField.onChange(null);
-              }
-            }}
-            placeholder="Seleccione hora (HH:mm)"
-            showNow={false}
-          />
-        );
-      default:
-        return <Input {...inputField} className="w-full" />;
-    }
-  };
-
-  // CAMBIO: Definir el spinner personalizado para la tabla
   const customSpinner = (
     <div className="w-full flex justify-center items-center py-2">
       <FadeLoader color="#0c5392" loading={loading} />
@@ -239,156 +185,25 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
 
   return (
     <>
-      <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
-        <h2 className="text-lg sm:text-xl font-bold text-primary-text">
-          {title}
-        </h2>
-        <Button
-          onClick={() => handleOpen()}
-          style={{ backgroundColor: "#0c5392", color: "#fff" }}
-          className="self-start sm:self-center w-fit"
-        >
-          Nuevo {title}
-        </Button>
-      </div>
-      {endpoint === "horarios" && (
+      <AdminTableHeader title={title} onNew={() => handleOpen()} />
+      {endpoint === 'horarios' && (
         <>
-          {selectedCount > 0 && (
-            <Alert
-              message={
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span>
-                    <Tag color="#0c5392">{selectedCount}</Tag>
-                    {selectedCount === 1
-                      ? " registro seleccionado"
-                      : " registros seleccionados"}
-                  </span>
-                  <Button danger size="small" onClick={handleBulkDeleteClick}>
-                    Eliminar seleccionados
-                  </Button>
-                </div>
-              }
-              type="info"
-              closable
-              onClose={clearSelection}
-              style={{ margin: "12px 0" }}
-            />
-          )}
+          <BulkActionBar
+            selectedCount={selectedCount}
+            onBulkDelete={handleBulkDeleteClick}
+            onClearSelection={clearSelection}
+          />
 
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-300">
-            <p className="text-sm font-semibold text-gray-700">
-              Selección rápida
-            </p>
-            <Space size="small">
-              <span className="text-xs text-gray-600">Modo:</span>
-              <Button
-                size="small"
-                style={filterMode === "replace" ? activeBtn : inactiveBtn}
-                onClick={() => setFilterMode("replace")}
-              >
-                Reemplazar
-              </Button>
-              <Button
-                size="small"
-                style={filterMode === "add" ? activeBtn : inactiveBtn}
-                onClick={() => setFilterMode("add")}
-              >
-                Agregar
-              </Button>
-            </Space>
-          </div>
+          <FilterModeSelector mode={filterMode} onModeChange={setFilterMode} />
 
-          <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por tipo de día:
-                </p>
-                <Space wrap size="small">
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("habil")}
-                  >
-                    Días hábiles
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("sabado")}
-                  >
-                    Sábados
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("domingo")}
-                  >
-                    Domingos
-                  </Button>
-                </Space>
-              </div>
-
-              <Divider className="my-2" />
-
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por línea:
-                </p>
-                <Space wrap size="small">
-                  {getUniqueLines().map((linea) => (
-                    <Button
-                      key={linea}
-                      size="small"
-                      onClick={() => handleQuickSelect("linea", linea)}
-                    >
-                      {linea}
-                    </Button>
-                  ))}
-                </Space>
-              </div>
-
-              <Divider className="my-2" />
-
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por recorrido:
-                </p>
-                <Space wrap size="small">
-                  {getUniqueRoutes().map((recorrido) => (
-                    <Button
-                      key={recorrido.key}
-                      size="small"
-                      className="text-xs"
-                      onClick={() =>
-                        handleQuickSelect("recorrido", recorrido.key)
-                      }
-                    >
-                      {recorrido.label}
-                    </Button>
-                  ))}
-                </Space>
-              </div>
-            </div>
-
-            <Divider className="my-2" />
-
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Acciones:
-            </p>
-            <Space wrap size="small">
-              <Button
-                size="small"
-                style={{ backgroundColor: "#0c5392", color: "#fff" }}
-                onClick={() => handleQuickSelect("all")}
-              >
-                Seleccionar todos
-              </Button>
-              <Button size="small" onClick={() => handleQuickSelect("clear")}>
-                Limpiar selección
-              </Button>
-            </Space>
-          </div>
+          <QuickFilters
+            uniqueLines={getUniqueLines()}
+            uniqueRoutes={getUniqueRoutes()}
+            onQuickSelect={handleQuickSelect}
+          />
         </>
       )}
-      {isMobile && endpoint === "horarios" ? (
+      {isMobile && endpoint === 'horarios' ? (
         <div className="space-y-2">
           {data.map((item) => (
             <div
@@ -409,7 +224,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               </p>
               <p className="text-gray-500 text-sm">{item.tipo_dia}</p>
               <p className="text-xs text-gray-400 mt-1">
-                Línea: {item.linea_nombre || "-"}
+                Línea: {item.linea_nombre || '-'}
               </p>
 
               {/* 🔸 Acciones */}
@@ -417,7 +232,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                 <Button
                   size="small"
                   onClick={() => handleOpen(item)} // editar
-                  style={{ backgroundColor: "#0c5392", color: "#fff" }}
+                  style={{ backgroundColor: '#0c5392', color: '#fff' }}
                 >
                   Editar
                 </Button>
@@ -464,10 +279,10 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         }}
         cancelText="Cancelar"
         onOk={handleSubmit(onSubmit)}
-        okText={editing ? "Guardar cambios" : "Crear"}
+        okText={editing ? 'Guardar cambios' : 'Crear'}
         okButtonProps={{
-          style: { backgroundColor: "#0c5392", color: "#fff" },
-          disabled: !isValid
+          style: { backgroundColor: '#0c5392', color: '#fff' },
+          disabled: !isValid,
         }}
         destroyOnHidden
       >
@@ -482,22 +297,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
           )}
 
           {formFields.map((field) => (
-            <div key={field.name} className="mb-2">
-              <label className="block mb-1 font-semibold text-primary-text">
-                {field.label}
-                {field.rules?.required && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
-              </label>
-              <Controller
-                name={field.name}
-                control={control}
-                rules={field.rules}
-                render={({ field: inputField }) =>
-                  renderFormField(field, inputField)
-                }
-              />
-            </div>
+            <FormField key={field.name} field={field} control={control} />
           ))}
         </form>
       </Modal>
