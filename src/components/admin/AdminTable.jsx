@@ -21,7 +21,6 @@ import {
 import { AdminTableHeader } from '../features/admin/AdminTable';
 import {
   BulkActionBar,
-  FilterModeSelector,
   QuickFilters,
 } from '../features/admin/BulkActions';
 import { FormField } from '../common/FormField';
@@ -59,8 +58,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
   const {
     selectedRowKeys,
     setSelectedRowKeys,
-    filterMode,
-    setFilterMode,
     handleQuickSelect,
     getUniqueLines,
     getUniqueRoutes,
@@ -193,8 +190,6 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
             onBulkDelete={handleBulkDeleteClick}
             onClearSelection={clearSelection}
           />
-
-          <FilterModeSelector mode={filterMode} onModeChange={setFilterMode} />
 
           <QuickFilters
             uniqueLines={getUniqueLines()}

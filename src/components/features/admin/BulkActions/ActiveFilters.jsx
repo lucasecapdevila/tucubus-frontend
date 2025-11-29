@@ -1,4 +1,4 @@
-import React from 'react'
+import { Button, Space, Tag } from "antd"
 
 const ActiveFilters = ({ activeFilters, onRemoveFilter }) => {
   if(activeFilters.length === 0) return null
