@@ -21,7 +21,7 @@ const BulkActionBar = ({ selectedCount, onBulkDelete, onClearSelection }) => {
       type="info"
       closable
       onClose={onClearSelection}
-      className="mb-3"
+      style={{marginBottom: '12px'}}
     />
   );
 };

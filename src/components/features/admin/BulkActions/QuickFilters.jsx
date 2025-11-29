@@ -1,8 +1,61 @@
+import { useState } from 'react';
 import { Button, Space, Divider } from 'antd';
 import FilterButton from './FilterButton';
+import ActiveFilters from './ActiveFilters';
 
 const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
+  const [activeFilters, setActiveFilters] = useState([])
+
+  const handleFilterClick = (type, value) => {
+    let newFilters
+    const filterKey = `${type}-${value}`
+    const existingFilter = activeFilters.find(f => f.key === filterKey)
+
+    if(existingFilter){
+      newFilters = activeFilters.filter(f => f.key !== filterKey)
+      onQuickSelect(type, value, 'remove')
+    } else{
+      let label
+      if(type === 'habil') label = 'Días hábiles'
+      else if(type === 'sabado') label = 'Sábados'
+      else if(type === 'domingo') label = 'Domingos'
+      else if(type === 'linea') label = `Linea: ${value}`
+      else if(type === 'recorrido'){
+        const route = uniqueRoutes.find(r => r.key === value)
+        label = route ? `Ruta: ${route.label}` : value
+      }
+
+      newFilters = [...activeFilters, { key: filterKey, type, value, label }]
+      onQuickSelect(type, value, 'add')
+    }
+
+    setActiveFilters(newFilters)
+  }
+
+  const handleRemoveFilter = (filterKey) => {
+    if(filterKey === 'all'){
+      setActiveFilters([])
+      onQuickSelect('clearAll')
+    } else{
+      const filter = activeFilters.find(f => f.key === filterKey)
+      if(filter){
+        setActiveFilters(activeFilters.filter(f => f.key !== filterKey))
+        onQuickSelect(filter.type, filter.value, 'remove')
+      }
+    }
+  }
+
+  const isFilterActive = (type, value) => {
+    const filterKey = `${type}-${value}`
+    return activeFilters.some(f => f.key === filterKey)
+  }
+
   return (
+    <>
+    <ActiveFilters
+      activeFilters={activeFilters}
+      onRemoveFilter={handleRemoveFilter}
+    />
     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
       <div className="space-y-3">
         {/* Filtros por tipo de día */}
@@ -13,15 +66,18 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
           <Space wrap size="small">
             <FilterButton
               label="Días hábiles"
-              onClick={() => onQuickSelect('habil')}
+              onClick={() => handleFilterClick('habil', 'habil')}
+              isActive={isFilterActive('habil', 'habil')}
             />
             <FilterButton
               label="Sábados"
-              onClick={() => onQuickSelect('sabado')}
+              onClick={() => handleFilterClick('sabado', 'sabado')}
+              isActive={isFilterActive('sabado', 'sabado')}
             />
             <FilterButton
               label="Domingos"
-              onClick={() => onQuickSelect('domingo')}
+              onClick={() => handleFilterClick('domingo', 'domingo')}
+              isActive={isFilterActive('domingo', 'domingo')}
             />
           </Space>
         </div>
@@ -38,7 +94,8 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
               <FilterButton
                 key={linea}
                 label={linea}
-                onClick={() => onQuickSelect('linea', linea)}
+                onClick={() => handleFilterClick('linea', linea)}
+                isActive={isFilterActive('linea', linea)}
               />
             ))}
           </Space>
@@ -56,7 +113,8 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
               <FilterButton
                 key={recorrido.key}
                 label={recorrido.label}
-                onClick={() => onQuickSelect('recorrido', recorrido.key)}
+                onClick={() => handleFilterClick('recorrido', recorrido.key)}
+                isActive={isFilterActive('recorrido', recorrido.key)}
               />
             ))}
           </Space>
@@ -80,6 +138,7 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
         </Button>
       </Space>
     </div>
+    </>
   );
 };
 
