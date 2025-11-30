@@ -1,21 +1,21 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 const FILTER_CONFIG = {
   byDayType: [
     {
-      key: "habil",
-      label: "Días hábiles",
-      filter: (r) => r.tipo_dia === "habil",
+      key: 'habil',
+      label: 'Días hábiles',
+      filter: (r) => r.tipo_dia === 'habil',
     },
-    { key: "sabado", label: "Sábados", filter: (r) => r.tipo_dia === "sábado" },
+    { key: 'sabado', label: 'Sábados', filter: (r) => r.tipo_dia === 'sábado' },
     {
-      key: "domingo",
-      label: "Domingos",
-      filter: (r) => r.tipo_dia === "domingo",
+      key: 'domingo',
+      label: 'Domingos',
+      filter: (r) => r.tipo_dia === 'domingo',
     },
   ],
   byAttribute: [
-    { key: "directos", label: "Directos", filter: (r) => r.directo === true },
+    { key: 'directos', label: 'Directos', filter: (r) => r.directo === true },
   ],
   dynamic: {
     byLine: (lineaNombre) => ({
@@ -33,61 +33,60 @@ const FILTER_CONFIG = {
 
 const useBulkSelection = (data = [], endpoint) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [filterMode, setFilterMode] = useState("replace");
 
-  const handleQuickSelect = (filterType, filterValue = null) => {
+  const handleQuickSelect = (filterType, filterValue = null, mode = 'add') => {
     if (!data || data.length === 0) {
-      return { success: false, message: "No hay datos para filtrar." };
+      return { success: false, message: 'No hay datos para filtrar.' };
     }
 
     let filtered = [];
 
     switch (filterType) {
-      case "habil":
-      case "sabado":
-      case "domingo": {
+      case 'habil':
+      case 'sabado':
+      case 'domingo': {
         const config = FILTER_CONFIG.byDayType.find(
-          (f) => f.key === filterType
+          (f) => f.key === filterType,
         );
         if (config) filtered = data.filter(config.filter).map((r) => r.id);
         break;
       }
 
-      case "directos": {
+      case 'directos': {
         const config = FILTER_CONFIG.byAttribute.find(
-          (f) => f.key === "directos"
+          (f) => f.key === 'directos',
         );
         if (config) filtered = data.filter(config.filter).map((r) => r.id);
         break;
       }
 
-      case "linea": {
+      case 'linea': {
         if (!filterValue)
-          return { success: false, message: "Debe especificar una línea." };
+          return { success: false, message: 'Debe especificar una línea.' };
         const config = FILTER_CONFIG.dynamic.byLine(filterValue);
         filtered = data.filter(config.filter).map((r) => r.id);
         break;
       }
 
-      case "recorrido": {
+      case 'recorrido': {
         if (!filterValue)
-          return { success: false, message: "Debe especificar un recorrido." };
+          return { success: false, message: 'Debe especificar un recorrido.' };
         const record = data.find((r) => r.recorrido_id === filterValue);
         const label = record
           ? `${record.origen} - ${record.destino}`
-          : "Recorrido";
+          : 'Recorrido';
         const config = FILTER_CONFIG.dynamic.byRoute(filterValue, label);
         filtered = data.filter(config.filter).map((r) => r.id);
         break;
       }
 
-      case "all":
-        filtered = data.map((r) => r.id);
-        break;
+      case 'all':
+        setSelectedRowKeys(data.map((r) => r.id));
+        return { success: true, count: data.length, mode: 'replace' };
 
-      case "clear":
-        filtered = [];
-        break;
+      case 'clear':
+        setSelectedRowKeys([]);
+        return { success: true, count: 0, mode: 'replace' };
 
       default:
         return {
@@ -96,22 +95,27 @@ const useBulkSelection = (data = [], endpoint) => {
         };
     }
 
-    if (
-      filterMode === "add" &&
-      filterType !== "all" &&
-      filterType !== "clear"
-    ) {
+    // Aplicar el modo (add o remove)
+    if (mode === 'remove') {
+      // Quitar los IDs filtrados de la selección actual
+      setSelectedRowKeys((prev) =>
+        prev.filter((key) => !filtered.includes(key)),
+      );
+      return {
+        success: true,
+        count: filtered.length,
+        mode: 'remove',
+      };
+    } else {
+      // Agregar los IDs filtrados a la selección actual (sin duplicados)
       const combined = [...new Set([...selectedRowKeys, ...filtered])];
       setSelectedRowKeys(combined);
       return {
         success: true,
         count: filtered.length,
         total: combined.length,
-        mode: "add",
+        mode: 'add',
       };
-    } else {
-      setSelectedRowKeys(filtered);
-      return { success: true, count: filtered.length, mode: "replace" };
     }
   };
 
@@ -133,15 +137,13 @@ const useBulkSelection = (data = [], endpoint) => {
       }
     });
     return Array.from(routesMap.values()).sort((a, b) =>
-      a.label.localeCompare(b.label)
+      a.label.localeCompare(b.label),
     );
   };
 
   return {
     selectedRowKeys,
     setSelectedRowKeys,
-    filterMode,
-    setFilterMode,
     handleQuickSelect,
     getUniqueLines,
     getUniqueRoutes,
