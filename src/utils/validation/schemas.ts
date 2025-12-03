@@ -1,10 +1,21 @@
+import { ValidationResult } from "@/types";
 import {
   horariosValidator,
   recorridosValidator,
   lineasValidator,
 } from "./validators";
 
-export const VALIDATION_SCHEMAS = {
+interface CrossFieldRule {
+  fields: string[];
+  validator: (values: Record<string, any>) => ValidationResult;
+}
+
+interface ValidationSchema {
+  crossField?: CrossFieldRule[];
+  single?: Record<string, (value: any) => ValidationResult>;
+}
+
+export const VALIDATION_SCHEMAS: Record<string, ValidationSchema> = {
   horarios: {
     crossField: [
       {

@@ -1,5 +1,7 @@
+import { ValidationResult } from "@/types";
+
 export const lineasValidator = {
-  validateName: (nombre) => {
+  validateName: (nombre: string): ValidationResult => {
     if (!nombre || nombre.trim().length < 2) {
       return {
         valid: false,

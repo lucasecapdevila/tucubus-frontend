@@ -1,10 +1,12 @@
-const timeToMinutes = (time) => {
+import { ValidationResult } from "@/types";
+
+const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
 export const horariosValidator = {
-  validateTimes: (horaSalida, horaLlegada) => {
+  validateTimes: (horaSalida: string, horaLlegada: string): ValidationResult => {
     if (!horaSalida || !horaLlegada) {
       return { valid: false, message: "Ambas horas son requeridas." };
     }

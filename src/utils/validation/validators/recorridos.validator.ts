@@ -1,5 +1,7 @@
+import { ValidationResult } from "@/types";
+
 export const recorridosValidator = {
-  validateRoute: (origen, destino) => {
+  validateRoute: (origen: string, destino: string): ValidationResult => {
     if (!origen || !destino) {
       return { valid: false, message: "Origen y destino son requeridos." };
     }
