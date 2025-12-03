@@ -5,7 +5,7 @@ import { useCrud } from "../../hooks/useCrud";
 import { rolesOptions, tipoDiaOptions } from "../../utils/adminPanelOptions";
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import toast from "react-hot-toast";
-import AdminTable from "../admin/AdminTable";
+import { AdminTable } from "../admin";
 
 const Admin = () => {
   const [lineasOptions, setLineasOptions] = useState([]);
