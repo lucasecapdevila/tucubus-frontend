@@ -3,8 +3,9 @@ import { ArrowRightOutlined, ExclamationCircleOutlined } from "@ant-design/icons
 
 const { Text, Paragraph } = Typography;
 
-const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "linea" }) => {
-  const isLinea = entityType === "linea";
+const CascadeDeleteModal = ({ data, onConfirm, onCancel }) => {
+  const entityType = data?.entityType || "linea";
+  const isLinea = entityType === 'linea';
 
   return (
     <Modal
@@ -30,16 +31,16 @@ const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "l
               {isLinea && (
                 <>
                   <Text strong className="block">
-                    {conflictData.recorridos_count} recorridos
+                    {data?.recorridos_count ?? 0} recorridos
                   </Text>
                   <Text strong className="block">
-                    {conflictData.horarios_count} horarios
+                    {data?.horarios_count ?? 0} horarios
                   </Text>
                 </>
               )}
               {!isLinea && (
                 <Text strong className="block">
-                  {conflictData.horarios_count} horarios
+                  {data?.horarios_count ?? 0} horarios
                 </Text>
               )}
             </div>
@@ -47,7 +48,7 @@ const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "l
         />
 
         {/* Recorridos afectados */}
-        {isLinea && conflictData.recorridos?.length > 0 && (
+        {isLinea && data?.recorridos?.length > 0 && (
           <>
             <Divider />
 
@@ -56,7 +57,7 @@ const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "l
                 Recorridos que serán eliminados:
               </Paragraph>
 
-              {conflictData.recorridos.map((rec) => (
+              {data?.recorridos?.map((rec) => (
                 <Paragraph key={rec.id} className="text-sm mb-1">
                   <Text code>ID {rec.id}</Text> – {rec.origen}{" "}
                   <ArrowRightOutlined /> {rec.destino}
@@ -67,7 +68,7 @@ const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "l
         )}
 
         {/* Preview horarios */}
-        {!isLinea && conflictData.horarios_preview?.length > 0 && (
+        {!isLinea && data?.horarios_preview?.length > 0 && (
           <>
             <Divider />
 
@@ -77,17 +78,17 @@ const CascadeDeleteModal = ({ conflictData, onConfirm, onCancel, entityType = "l
               </Paragraph>
 
               <div className="flex flex-wrap gap-1">
-                {conflictData.horarios_preview.map((id) => (
+                {data?.horarios_preview?.map((id) => (
                   <Text key={id} code className="text-xs">
                     ID {id}
                   </Text>
                 ))}
               </div>
 
-              {conflictData.horarios_count >
-                conflictData.horarios_preview.length && (
+              {(data?.horarios_count ?? 0) >
+                (data?.horarios_preview?.length ?? 0) && (
                 <Paragraph className="text-xs text-gray-500 mt-2 mb-0">
-                  ... y {conflictData.horarios_count - conflictData.horarios_preview.length} más
+                  ... y {(data?.horarios_count ?? 0) - (data?.horarios_preview?.length ?? 0)} más
                 </Paragraph>
               )}
             </div>

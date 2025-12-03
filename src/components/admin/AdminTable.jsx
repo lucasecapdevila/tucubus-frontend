@@ -1,96 +1,71 @@
-import { useEffect, useState } from "react";
-import { useMediaQuery } from "react-responsive";
-import { FadeLoader } from "react-spinners";
-import { useCrud } from "../../hooks/useCrud";
-import { Controller, useForm } from "react-hook-form";
+import { useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
+import { FadeLoader } from 'react-spinners';
+import {
+  useFormValidation,
+  useBulkSelection,
+  useAdminTable,
+} from '../../hooks/features';
 import {
   Button,
-  Input,
   Modal,
   Popconfirm,
   Table,
-  Select,
-  Switch,
-  TimePicker,
   Alert,
-  Space,
-  Tag,
-  Divider,
-} from "antd";
+} from 'antd';
 import {
   DeleteOutlined,
   EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
+} from '@ant-design/icons';
+
+import { AdminTableHeader } from '../features/admin/AdminTable';
 import {
-  validateHorarioTimes,
-  validateRecorrido,
-  validateLineaNombre,
-  calculateTripDuration,
-  formatDuration,
-  crossesMidnight,
-} from "../../utils/validation";
-import toast from "react-hot-toast";
-import CascadeDeleteModal from "../common/CascadeDeleteModal";
+  BulkActionBar,
+  QuickFilters,
+} from '../features/admin/BulkActions';
+import { FormField } from '../common/FormField';
+
+import toast from 'react-hot-toast';
+import CascadeDeleteModal from '../common/CascadeDeleteModal';
 
 const AdminTable = ({ title, endpoint, columns, formFields }) => {
-  const { getAll, create, update, remove, bulkRemove, loading } =
-    useCrud(endpoint);
-  const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [validationAlert, setValidationAlert] = useState(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [filterMode, setFilterMode] = useState("replace");
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [cascadeModal, setCascadeModal] = useState(null);
 
-  const { handleSubmit, control, reset, setValue, watch } = useForm();
+  const {
+    data,
+    loading,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    handleBulkDelete,
+    paginationConfig,
+  } = useAdminTable(endpoint);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    validationAlert,
+    isValid,
+    validateBeforeSubmit,
+    clearValidation,
+  } = useFormValidation(endpoint);
+
+  const {
+    selectedRowKeys,
+    setSelectedRowKeys,
+    handleQuickSelect,
+    getUniqueLines,
+    getUniqueRoutes,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection(data, endpoint);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
-
-  const PAGE_SIZE = 10;
-
-  const activeBtn = {
-    backgroundColor: "#0c5392",
-    color: "#fff",
-    borderColor: "#0c5392",
-  };
-
-  const inactiveBtn = {
-    backgroundColor: "#fff",
-    color: "#0c5392",
-    borderColor: "#0c5392",
-  };
-
-  const flattenData = (arr) => {
-    return arr.map((item) => {
-      const flat = { ...item };
-
-      // Asegurar label del recorrido
-      if (item.origen && item.destino) {
-        flat.recorrido_label = `${item.origen} — ${item.destino}`;
-      }
-
-      return flat;
-    });
-  };
-
-  const fetchData = async () => {
-    try {
-      const result = await getAll();
-      setData(flattenData(result));
-    } catch (error) {
-      toast.error(`Error al cargar ${title.toLowerCase()}: ${error.message}`);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleOpen = async (record = null) => {
     if (record) {
@@ -102,296 +77,81 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       setEditing(null);
       reset();
     }
-    setValidationAlert(null);
+    clearValidation();
     setOpen(true);
   };
 
-  // Validación en tiempo real
-  useEffect(() => {
-    if (!open) return;
-
-    const subscription = watch((values) => {
-      // Validación para horarios
-      if (endpoint === "horarios") {
-        const { hora_salida, hora_llegada } = values;
-
-        if (hora_salida && hora_llegada) {
-          const validation = validateHorarioTimes(hora_salida, hora_llegada);
-
-          if (validation.valid) {
-            const duration = calculateTripDuration(hora_salida, hora_llegada);
-            const crosses = crossesMidnight(hora_salida, hora_llegada);
-            const hoursMin = formatDuration(duration);
-
-            setValidationAlert({
-              type: "success",
-              message: `Duración: ${hoursMin}${
-                crosses ? " - Este viaje cruza medianoche" : ""
-              }`,
-            });
-          } else {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-
-      // Validación para recorridos
-      if (endpoint === "recorridos") {
-        const { origen, destino } = values;
-
-        if (origen && destino) {
-          const validation = validateRecorrido(origen, destino);
-
-          if (!validation.valid) {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          } else {
-            setValidationAlert(null);
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-
-      // Validación para líneas
-      if (endpoint === "lineas") {
-        const { nombre } = values;
-
-        if (nombre) {
-          const validation = validateLineaNombre(nombre);
-
-          if (!validation.valid) {
-            setValidationAlert({
-              type: "error",
-              message: `${validation.message}`,
-            });
-          } else {
-            setValidationAlert(null);
-          }
-        } else {
-          setValidationAlert(null);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, open, endpoint]);
-
   const onSubmit = async (values) => {
-    // Prevenir envío si hay alerta de error visible
-    if (validationAlert?.type === "error") {
-      toast.error("Por favor corrija los errores antes de guardar");
+    // Validar antes de enviar
+    const validation = validateBeforeSubmit();
+
+    if (!validation.valid) {
+      toast.error(validation.message);
       return;
     }
 
-    try {
-      // Validaciones específicas por endpoint antes de enviar
-      if (endpoint === "horarios") {
-        const timeValidation = validateHorarioTimes(
-          values.hora_salida,
-          values.hora_llegada
-        );
-        if (!timeValidation.valid) {
-          toast.error(timeValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${timeValidation.message}`,
-          });
-          return;
-        }
-      }
+    const result = editing
+      ? await handleUpdate(editing.id, values)
+      : await handleCreate(values);
 
-      if (endpoint === "recorridos") {
-        const recorridoValidation = validateRecorrido(
-          values.origen,
-          values.destino
-        );
-        if (!recorridoValidation.valid) {
-          toast.error(recorridoValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${recorridoValidation.message}`,
-          });
-          return;
-        }
-      }
-
-      if (endpoint === "lineas") {
-        const lineaValidation = validateLineaNombre(values.nombre);
-        if (!lineaValidation.valid) {
-          toast.error(lineaValidation.message);
-          setValidationAlert({
-            type: "error",
-            message: `${lineaValidation.message}`,
-          });
-          return;
-        }
-      }
-
-      if (editing) {
-        await update(editing.id, values);
-        toast.success(`${title} actualizado`);
-      } else {
-        await create(values);
-        toast.success(`${title} creado`);
-      }
-
-      fetchData();
+    if (result.success) {
       setOpen(false);
       reset();
-      setValidationAlert(null);
-    } catch (error) {
-      const errorDetail = error.response?.data?.detail || error.message;
-      toast.error(`Error al guardar: ${errorDetail}`);
-      console.error("Error completo:", error.response?.data);
+      clearValidation();
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await remove(id, false);
-      toast.success(`${title} eliminado`);
-      fetchData();
-      setSelectedRowKeys([]);
-    } catch (error) {
-      const errorData = error.response?.data?.detail;
+  const handleDeleteClick = async (id) => {
+    const result = await handleDelete(id, false);
 
-      if (error.response?.status === 409 && typeof errorData === "object") {
-        const entityType = endpoint === "lineas" ? "linea" : "recorrido";
-
-        setCascadeModal({
-          conflictData: errorData,
-          entityType,
-          id,
-        });
-        return;
-      }
-
-      const errorDetail = error.response?.data?.detail || error.message;
-      toast.error(errorDetail, { duration: 6000 });
-      console.error("Error al eliminar:", error.response?.data);
+    if (result.conflict) {
+      const entityType = endpoint === 'lineas' ? 'linea' : 'recorrido';
+      setCascadeModal({
+        id,
+        entityType,
+        ...result.conflictData,
+      });
+    } else if (result.success) {
+      clearSelection();
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedRowKeys.length === 0) {
-      toast.error("Seleccione al menos un registro.");
+  const handleBulkDeleteClick = () => {
+    if (selectedCount === 0) {
+      toast.error('Seleccione al menos un registro.');
       return;
     }
     setBulkModalOpen(true);
   };
 
-  const handleQuickSelect = (filterType, filterValue = null) => {
-    let filtered = [];
-
-    switch (filterType) {
-      // Filtros por tipo de día
-      case "habil":
-        filtered = data.filter((h) => h.tipo_dia === "habil").map((h) => h.id);
-        break;
-      case "sabado":
-        filtered = data.filter((h) => h.tipo_dia === "sábado").map((h) => h.id);
-        break;
-      case "domingo":
-        filtered = data
-          .filter((h) => h.tipo_dia === "domingo")
-          .map((h) => h.id);
-        break;
-
-      case "directos":
-        filtered = data.filter((h) => h.directo === true).map((h) => h.id);
-        break;
-
-      case "linea":
-        filtered = data
-          .filter((h) => h.linea_nombre === filterValue)
-          .map((h) => h.id);
-        break;
-
-      case "recorrido": {
-        const recorridoId = filterValue;
-        filtered = data
-          .filter((h) => h.recorrido_id === recorridoId)
-          .map((h) => h.id);
-        break;
-      }
-
-      // Acciones generales
-      case "all":
-        filtered = data.map((h) => h.id);
-        break;
-      case "clear":
-        filtered = [];
-        break;
-
-      default:
-        filtered = [];
-    }
-
-    if (
-      filterMode === "add" &&
-      filterType !== "all" &&
-      filterType !== "clear"
-    ) {
-      const combined = [...new Set([...selectedRowKeys, ...filtered])];
-      setSelectedRowKeys(combined);
-      toast.success(
-        `+${filtered.length} registros añadidos a la selección (Total: ${combined.length})`
-      );
-    } else {
-      setSelectedRowKeys(filtered);
-    }
-
-    if (filtered.length > 0) {
-      toast.success(
-        `${filtered.length} ${
-          filtered.length === 1
-            ? "registro seleccionado"
-            : "registros seleccionados"
-        }`
-      );
-    } else if (filterType === "clear") {
-      toast.success("Selección limpiada");
-    } else {
-      toast.error("No se encontraron registros con ese filtro");
-    }
-  };
-
   const tableColumns = [
     ...columns,
     {
-      title: "Acciones",
-      align: "center",
+      title: 'Acciones',
+      align: 'center',
       render: (_, record) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
-            <EditOutlined style={{ color: "#0c5392", fontSize: "16px" }} />
+            <EditOutlined style={{ color: '#0c5392', fontSize: '16px' }} />
           </Button>
           <Popconfirm
             title={`¿Eliminar este ${title.toLowerCase()}?`}
             description={
-              endpoint === "lineas"
-                ? "Si contiene recorridos/horarios, no se podrá eliminar"
-                : endpoint === "recorridos"
-                ? "Si contiene horarios, no se podrá eliminar"
-                : endpoint === "users"
-                ? "No se puede eliminar el último administrador"
-                : "Esta acción no se puede deshacer"
+              endpoint === 'lineas'
+                ? 'Si contiene recorridos/horarios, estos se perderán.'
+                : endpoint === 'recorridos'
+                  ? 'Si contiene horarios, estos se perderán.'
+                  : endpoint === 'users'
+                    ? 'No se puede eliminar el último administrador'
+                    : 'Esta acción no se puede deshacer'
             }
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDeleteClick(record.id)}
             okText="Sí, eliminar"
             cancelText="Cancelar"
             okButtonProps={{ danger: true }}
           >
             <Button type="link" danger>
-              <DeleteOutlined style={{ fontSize: "16px" }} />
+              <DeleteOutlined style={{ fontSize: '16px' }} />
             </Button>
           </Popconfirm>
         </>
@@ -399,18 +159,8 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     },
   ];
 
-  const tablePagination =
-    data.length > PAGE_SIZE
-      ? {
-          pageSize: PAGE_SIZE,
-          showSizeChanger: false,
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} de ${total} registros`,
-        }
-      : false;
-
   const rowSelection =
-    endpoint === "horarios"
+    endpoint === 'horarios'
       ? {
           selectedRowKeys,
           onChange: (newSelectedRowKeys) => {
@@ -424,233 +174,31 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         }
       : undefined;
 
-  const renderFormField = (field, inputField) => {
-    switch (field.type) {
-      case "select":
-        return (
-          <Select
-            className="w-full"
-            value={inputField.value !== undefined ? inputField.value : null}
-            onChange={inputField.onChange}
-            options={field.options || []}
-            placeholder={`Seleccione ${field.label.toLowerCase()}`}
-          />
-        );
-      case "switch":
-        return (
-          <Switch
-            checked={!!inputField.value}
-            onChange={(val) => inputField.onChange(val)}
-          />
-        );
-      case "time":
-        return (
-          <TimePicker
-            format="HH:mm"
-            className="w-full"
-            value={inputField.value ? dayjs(inputField.value, "HH:mm") : null}
-            onChange={(time) => {
-              if (time) {
-                const formatted = time.format("HH:mm");
-                inputField.onChange(formatted);
-              } else {
-                inputField.onChange(null);
-              }
-            }}
-            placeholder="Seleccione hora (HH:mm)"
-            showNow={false}
-          />
-        );
-      default:
-        return <Input {...inputField} className="w-full" />;
-    }
-  };
-
-  // CAMBIO: Definir el spinner personalizado para la tabla
   const customSpinner = (
     <div className="w-full flex justify-center items-center py-2">
       <FadeLoader color="#0c5392" loading={loading} />
     </div>
   );
 
-  const getUniqueLineas = () => {
-    const lineas = [
-      ...new Set(data.map((h) => h.linea_nombre).filter(Boolean)),
-    ];
-    return lineas.sort();
-  };
-
-  const getUniqueRecorridos = () => {
-    const recorridosMap = new Map();
-
-    data.forEach((h) => {
-      if (h.recorrido_id && h.origen && h.destino) {
-        const id = h.recorrido_id;
-        const label = `${h.origen} - ${h.destino}`;
-
-        if (!recorridosMap.has(id)) {
-          recorridosMap.set(id, { key: id, label });
-        }
-      }
-    });
-
-    return Array.from(recorridosMap.values()).sort((a, b) =>
-      a.label.localeCompare(b.label)
-    );
-  };
-
   return (
     <>
-      <div className="w-full flex justify-between items-center gap-2 mb-4 px-2">
-        <h2 className="text-lg sm:text-xl font-bold text-primary-text">
-          {title}
-        </h2>
-        <Button
-          onClick={() => handleOpen()}
-          style={{ backgroundColor: "#0c5392", color: "#fff" }}
-          className="self-start sm:self-center w-fit"
-        >
-          Nuevo {title}
-        </Button>
-      </div>
-      {endpoint === "horarios" && (
+      <AdminTableHeader title={title} onNew={() => handleOpen()} />
+      {endpoint === 'horarios' && (
         <>
-          {selectedRowKeys.length > 0 && (
-            <Alert
-              message={
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span>
-                    <Tag color="#0c5392">{selectedRowKeys.length}</Tag>
-                    {selectedRowKeys.length === 1
-                      ? " registro seleccionado"
-                      : " registros seleccionados"}
-                  </span>
-                  <Button danger size="small" onClick={handleBulkDelete}>
-                    Eliminar seleccionados
-                  </Button>
-                </div>
-              }
-              type="info"
-              closable
-              onClose={() => setSelectedRowKeys([])}
-              className="mb-3"
-            />
-          )}
+          <BulkActionBar
+            selectedCount={selectedCount}
+            onBulkDelete={handleBulkDeleteClick}
+            onClearSelection={clearSelection}
+          />
 
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-300">
-            <p className="text-sm font-semibold text-gray-700">
-              Selección rápida
-            </p>
-            <Space size="small">
-              <span className="text-xs text-gray-600">Modo:</span>
-              <Button
-                size="small"
-                style={filterMode === "replace" ? activeBtn : inactiveBtn}
-                onClick={() => setFilterMode("replace")}
-              >
-                Reemplazar
-              </Button>
-              <Button
-                size="small"
-                style={filterMode === "add" ? activeBtn : inactiveBtn}
-                onClick={() => setFilterMode("add")}
-              >
-                Agregar
-              </Button>
-            </Space>
-          </div>
-
-          <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por tipo de día:
-                </p>
-                <Space wrap size="small">
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("habil")}
-                  >
-                    Días hábiles
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("sabado")}
-                  >
-                    Sábados
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => handleQuickSelect("domingo")}
-                  >
-                    Domingos
-                  </Button>
-                </Space>
-              </div>
-
-              <Divider className="my-2" />
-
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por línea:
-                </p>
-                <Space wrap size="small">
-                  {getUniqueLineas().map((linea) => (
-                    <Button
-                      key={linea}
-                      size="small"
-                      onClick={() => handleQuickSelect("linea", linea)}
-                    >
-                      {linea}
-                    </Button>
-                  ))}
-                </Space>
-              </div>
-
-              <Divider className="my-2" />
-
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Por recorrido:
-                </p>
-                <Space wrap size="small">
-                  {getUniqueRecorridos().map((recorrido) => (
-                    <Button
-                      key={recorrido.key}
-                      size="small"
-                      className="text-xs"
-                      onClick={() =>
-                        handleQuickSelect("recorrido", recorrido.key)
-                      }
-                    >
-                      {recorrido.label}
-                    </Button>
-                  ))}
-                </Space>
-              </div>
-            </div>
-
-            <Divider className="my-2" />
-
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Acciones:
-            </p>
-            <Space wrap size="small">
-              <Button
-                size="small"
-                style={{ backgroundColor: "#0c5392", color: "#fff" }}
-                onClick={() => handleQuickSelect("all")}
-              >
-                Seleccionar todos
-              </Button>
-              <Button size="small" onClick={() => handleQuickSelect("clear")}>
-                Limpiar selección
-              </Button>
-            </Space>
-          </div>
+          <QuickFilters
+            uniqueLines={getUniqueLines()}
+            uniqueRoutes={getUniqueRoutes()}
+            onQuickSelect={handleQuickSelect}
+          />
         </>
       )}
-      {isMobile && endpoint === "horarios" ? (
+      {isMobile && endpoint === 'horarios' ? (
         <div className="space-y-2">
           {data.map((item) => (
             <div
@@ -671,7 +219,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               </p>
               <p className="text-gray-500 text-sm">{item.tipo_dia}</p>
               <p className="text-xs text-gray-400 mt-1">
-                Línea: {item.linea_nombre || "-"}
+                Línea: {item.linea_nombre || '-'}
               </p>
 
               {/* 🔸 Acciones */}
@@ -679,7 +227,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                 <Button
                   size="small"
                   onClick={() => handleOpen(item)} // editar
-                  style={{ backgroundColor: "#0c5392", color: "#fff" }}
+                  style={{ backgroundColor: '#0c5392', color: '#fff' }}
                 >
                   Editar
                 </Button>
@@ -690,7 +238,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
                   okText="Sí, eliminar"
                   cancelText="Cancelar"
                   okButtonProps={{ danger: true }}
-                  onConfirm={() => handleDelete(item.id)}
+                  onConfirm={() => handleDeleteClick(item.id)}
                 >
                   <Button size="small" danger>
                     Eliminar
@@ -710,7 +258,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
               dataSource={data}
               rowKey="id"
               loading={{ spinning: loading, indicator: customSpinner }}
-              pagination={tablePagination}
+              pagination={paginationConfig}
               size="large"
               className="w-full max-w-full"
             />
@@ -722,15 +270,17 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
         open={open}
         onCancel={() => {
           setOpen(false);
-          setValidationAlert(null);
+          clearValidation();
         }}
         cancelText="Cancelar"
         onOk={handleSubmit(onSubmit)}
-        okText={editing ? "Guardar cambios" : "Crear"}
-        okButtonProps={{ style: { backgroundColor: "#0c5392", color: "#fff" } }}
+        okText={editing ? 'Guardar cambios' : 'Crear'}
+        okButtonProps={{
+          style: { backgroundColor: '#0c5392', color: '#fff' },
+          disabled: !isValid,
+        }}
         destroyOnHidden
       >
-        {/* ... (sin cambios en el formulario del modal) */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           {validationAlert && (
             <Alert
@@ -742,37 +292,23 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
           )}
 
           {formFields.map((field) => (
-            <div key={field.name} className="mb-2">
-              <label className="block mb-1 font-semibold text-primary-text">
-                {field.label}
-                {field.rules?.required && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
-              </label>
-              <Controller
-                name={field.name}
-                control={control}
-                rules={field.rules}
-                render={({ field: inputField }) =>
-                  renderFormField(field, inputField)
-                }
-              />
-            </div>
+            <FormField key={field.name} field={field} control={control} />
           ))}
         </form>
       </Modal>
+
       <Modal
         open={bulkModalOpen}
         onCancel={() => setBulkModalOpen(false)}
         footer={null}
         width={500}
-        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}s?`}
+        title={`Eliminar ${selectedRowKeys.length} ${title.toLowerCase()}?`}
       >
         <div className="space-y-4 mt-3">
           <Alert
             type="warning"
             showIcon
-            message={`Total: ${selectedRowKeys.length} registros seleccionados`}
+            message={`Total: ${selectedCount} registros seleccionados`}
           />
 
           <p className="text-red-600 font-semibold">
@@ -785,22 +321,13 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
             <Button
               danger
               type="primary"
-              size="large"
+              size="middle"
               onClick={async () => {
-                try {
-                  await bulkRemove(selectedRowKeys);
-                  toast.success(
-                    `${selectedRowKeys.length} registros eliminados correctamente.`
-                  );
-                  setSelectedRowKeys([]);
-                  fetchData();
+                const result = await handleBulkDelete(selectedRowKeys);
+
+                if (result.success) {
+                  clearSelection();
                   setBulkModalOpen(false);
-                } catch (error) {
-                  const errorDetail =
-                    error.response?.data?.detail || error.message;
-                  toast.error(`Error al eliminar: ${errorDetail}`, {
-                    duration: 6000,
-                  });
                 }
               }}
             >
@@ -811,20 +338,14 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
       </Modal>
       {cascadeModal && (
         <CascadeDeleteModal
-          conflictData={cascadeModal.conflictData}
-          entityType={cascadeModal.entityType}
+          data={cascadeModal}
           onConfirm={async () => {
-            try {
-              await remove(cascadeModal.id, true);
-              toast.success(`${title} y datos relacionados eliminados.`);
-              fetchData();
-              setSelectedRowKeys([]);
-            } catch (err) {
-              const detail = err.response?.data?.detail || err.message;
-              toast.error(`Error al eliminar: ${detail}`);
-            } finally {
-              setCascadeModal(null);
+            const result = await handleDelete(cascadeModal.id, true);
+
+            if (result.success) {
+              clearSelection();
             }
+            setCascadeModal(null);
           }}
           onCancel={() => setCascadeModal(null)}
         />
