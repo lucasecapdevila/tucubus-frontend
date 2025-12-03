@@ -1,0 +1,53 @@
+import { Recorrido, TipoDia } from "../models"
+
+//  Credenciales de login
+export interface LoginCredentials {
+  username: string
+  userpassword: string
+}
+
+//  Respuesta de autenticación
+export interface AtuhResponse {
+  access_token: string
+}
+
+//  Parámetros para buscar horarios directos
+export interface HorariosDirectosParams {
+  origen: string
+  destino: string
+  tipo_dia: TipoDia
+  hora_actual: string
+}
+
+//  Parámetros para buscar conexiones
+export interface ConexionesParams extends HorariosDirectosParams {}
+
+//  Resultado genérico de una operación
+export interface OperationResult<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+//  Resultado de operación con conflictos
+export interface DeleteResult {
+  success: boolean
+  deleted?: number
+  conflict?: boolean
+  conflict_data?: {
+    recorridos_count?: number
+    horarios_count?: number
+    recorridos?: Recorrido[]
+    horarios_preview?: number[]
+  }
+  id: number
+  error?: string
+}
+
+//  Parámetros para paginación
+export interface Paginationconfig {
+  pageSize: number
+  showSizeChanger: boolean
+  showTotal: (total: number, range: [number, number]) => string
+}
