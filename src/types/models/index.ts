@@ -1,5 +1,7 @@
-//Usuario del sistema
+//  Tipo de endpoint API
+export type ApiEndpoint = 'recorridos' | 'lineas' | 'horarios' | 'users';
 
+//  Usuario del sistema
 export interface User {
   id: number;
   username: string;
@@ -8,14 +10,12 @@ export interface User {
 }
 
 //  Línea de transporte
-
 export interface Linea {
   id: number;
   nombre: string;
 }
 
 //  Recorrido entre dos ciudades
-
 export interface Recorrido {
   id: number;
   origen: string;
@@ -26,11 +26,9 @@ export interface Recorrido {
 }
 
 //  Tipo de día para horarios
-
 export type TipoDia = 'habil' | 'sábado' | 'domingo';
 
 //  Horario de viaje
-
 export interface Horario {
   id: number;
   tipo_dia: TipoDia;
@@ -46,13 +44,11 @@ export interface Horario {
 }
 
 //  Resultado de búsqueda de horarios directos
-
 export interface HorarioDirecto extends Horario {
   duracion?: number;
 }
 
 //  Conexión entre dos horarios
-
 export interface Conexion {
   // Tramo A (origen → ciudad intermedia)
   tramo_a_salida: string;
@@ -70,7 +66,6 @@ export interface Conexion {
 }
 
 //  Datos de conflicto al eliminar (cascada)
-
 export interface ConflictData {
   recorridos_count?: number;
   horarios_count: number;
