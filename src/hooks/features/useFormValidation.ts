@@ -1,13 +1,21 @@
-import { useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { VALIDATION_SCHEMAS } from "../../utils/validation/schemas";
+import { useState, useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { VALIDATION_SCHEMAS } from '../../utils/validation/schemas';
+import type { UseFormValidationReturn, ValidationAlert, ValidationResult } from '@/types';
 
-const useFormValidation = (entityType, options = {}) => {
-  const [validationAlert, setValidationAlert] = useState(null);
+interface UseFormValidationOptions {
+  defaultValues?: Record<string, any>;
+}
+
+const useFormValidation = (
+  entityType: string,
+  options: UseFormValidationOptions = {},
+): UseFormValidationReturn => {
+  const [validationAlert, setValidationAlert] = useState<ValidationAlert | null>(null);
 
   const { control, handleSubmit, reset, setValue, watch, formState } = useForm({
     defaultValues: options.defaultValues || {},
-    mode: "onChange",
+    mode: 'onChange',
   });
 
   const values = useWatch({ control });
@@ -27,10 +35,10 @@ const useFormValidation = (entityType, options = {}) => {
           const result = rule.validator(values);
 
           if (!result.valid) {
-            validationResult = { type: "error", message: result.message };
+            validationResult = { type: 'error' as const, message: result.message || 'Error de validación' };
             break;
           } else if (result.message) {
-            validationResult = { type: "success", message: result.message };
+            validationResult = { type: 'success' as const, message: result.message };
           }
         }
       }
@@ -42,7 +50,7 @@ const useFormValidation = (entityType, options = {}) => {
           const result = validator(values[field]);
 
           if (!result.valid) {
-            validationResult = { type: "error", message: result.message };
+            validationResult = { type: 'error' as const, message: result.message || 'Error de validación' };
             break;
           }
         }
@@ -52,14 +60,14 @@ const useFormValidation = (entityType, options = {}) => {
     setValidationAlert(validationResult);
   }, [values, schema]);
 
-  const validateBeforeSubmit = () => {
+  const validateBeforeSubmit = (): ValidationResult => {
     if (!schema) return { valid: true };
 
     if (schema.crossField) {
       for (const rule of schema.crossField) {
         const result = rule.validator(values);
         if (!result.valid) {
-          setValidationAlert({ type: "error", message: result.message });
+          setValidationAlert({ type: 'error' as const, message: result.message || 'Error de validación' });
           return { valid: false, message: result.message };
         }
       }
@@ -69,7 +77,7 @@ const useFormValidation = (entityType, options = {}) => {
       for (const [field, validator] of Object.entries(schema.single)) {
         const result = validator(values[field]);
         if (!result.valid) {
-          setValidationAlert({ type: "error", message: result.message });
+          setValidationAlert({ type: 'error' as const, message: result.message || 'Error de validación' });
           return { valid: false, message: result.message };
         }
       }
@@ -86,7 +94,7 @@ const useFormValidation = (entityType, options = {}) => {
     watch,
     values,
     errors: formState.errors,
-    isValid: !validationAlert || validationAlert.type !== "error",
+    isValid: !validationAlert || validationAlert.type !== 'error',
     validationAlert,
     validateBeforeSubmit,
     clearValidation: () => setValidationAlert(null),

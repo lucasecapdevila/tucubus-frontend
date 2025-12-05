@@ -9,6 +9,13 @@ export interface User {
   token?: string;
 }
 
+export interface JWTPayload {
+  sub: string;
+  role: string;
+  exp?: number;
+  iat?: number;
+}
+
 //  Línea de transporte
 export interface Linea {
   id: number;

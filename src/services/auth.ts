@@ -1,6 +1,7 @@
+import { AuthResponse, LoginCredentials } from "@/types";
 import api from "./api";
 
-export const login = async (user) => {
+export const login = async (user: LoginCredentials): Promise<AuthResponse> => {
   try {
     const response = await api.post("/auth/login", {
       username: user.username,
@@ -15,6 +16,7 @@ export const login = async (user) => {
     return {
       success: true,
       data: {
+        id: 0,
         username: payload.sub,
         role: payload.role,
         token: token,
@@ -24,12 +26,12 @@ export const login = async (user) => {
     console.error("Error al iniciar sesión: ", error);
     return {
       success: false,
-      error: error.response?.data?.detail || "Error al iniciar sesión",
+      error: error instanceof Error ? error.message : "Error al iniciar sesión"
     };
   }
 };
 
-export const registerUser = async (user) => {
+export const registerUser = async (user: LoginCredentials): Promise<AuthResponse> => {
   try {
     await api.post("/auth/register", {
       username: user.username,
@@ -42,7 +44,7 @@ export const registerUser = async (user) => {
     console.error("Error al registrar: ", error);
     return {
       success: false,
-      error: error.response?.data?.detail || "Error al registrar usuario",
+      error: error instanceof Error ? error.message : "Error al registrar usuario",
     };
   }
 };

@@ -1,4 +1,4 @@
-import { Recorrido, TipoDia } from "../models"
+import { Recorrido, TipoDia, User } from "../models"
 
 //  Credenciales de login
 export interface LoginCredentials {
@@ -7,8 +7,10 @@ export interface LoginCredentials {
 }
 
 //  Respuesta de autenticación
-export interface AtuhResponse {
-  access_token: string
+export interface AuthResponse {
+  success: boolean;
+  data?: User;
+  error?: string;
 }
 
 //  Parámetros para buscar horarios directos

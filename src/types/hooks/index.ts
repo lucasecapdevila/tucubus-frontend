@@ -1,5 +1,20 @@
 import { DeleteResult, OperationResult, Paginationconfig } from "../api";
 
+// Tipos de filtros disponibles
+export type FilterType = 'habil' | 'sabado' | 'domingo' | 'directos' | 'linea' | 'recorrido' | 'all' | 'clear';
+export type SelectionMode = 'add' | 'remove';
+
+// Estructura de un registro de horario
+export interface HorarioRecord {
+  id: number;
+  tipo_dia: 'habil' | 'sábado' | 'domingo';
+  directo: boolean;
+  linea_nombre: string;
+  recorrido_id: number;
+  origen: string;
+  destino: string;
+}
+
 //  Retorno del hook useAdminTable
 export interface AdminTableReturn {
   data: any[];
@@ -25,9 +40,7 @@ export interface AdminTableOptions {
 export interface UseBulkSelectionReturn {
   selectedRowKeys: number[]
   setSelectedRowKeys: (keys: number[]) => void
-  filterMode: "replace" | "add"
-  setFilterMode: (mode: "replace" | "add") => void
-  handleQuickSelect: (filterType: string, filterValue?: any) => QuickSelectResult
+  handleQuickSelect: (filterType: FilterType, filterValue?: string | number, mode?: SelectionMode) => QuickSelectResult
   getUniqueLines: () => string[]
   getUniqueRoutes: () => { key: number; label: string }[]
   ClearSelection: () => void
@@ -40,7 +53,7 @@ export interface QuickSelectResult {
   success: boolean
   count?: number
   total?: number
-  mode?: "replace" | "add"
+  mode?: "remove" | "add"
   message?: string
 }
 
@@ -65,6 +78,7 @@ export interface UseFormValidationReturn {
   watch: any
   values: any
   errors: any
+  isValid: boolean
   validationAlert: ValidationAlert | null
   validateBeforeSubmit: () => ValidationResult
   clearValidation: () => void

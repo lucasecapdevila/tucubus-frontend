@@ -1,45 +1,52 @@
 import { useState } from 'react';
+import type { QuickSelectResult, UseBulkSelectionReturn, HorarioRecord, FilterType, SelectionMode } from '@/types';
+
+interface FilterConfig {
+  key: string;
+  label: string;
+  filter: (record: HorarioRecord) => boolean;
+}
 
 const FILTER_CONFIG = {
   byDayType: [
     {
       key: 'habil',
       label: 'Días hábiles',
-      filter: (r) => r.tipo_dia === 'habil',
+      filter: (r: HorarioRecord) => r.tipo_dia === 'habil',
     },
-    { key: 'sabado', label: 'Sábados', filter: (r) => r.tipo_dia === 'sábado' },
+    { key: 'sabado', label: 'Sábados', filter: (r: HorarioRecord) => r.tipo_dia === 'sábado' },
     {
       key: 'domingo',
       label: 'Domingos',
-      filter: (r) => r.tipo_dia === 'domingo',
+      filter: (r: HorarioRecord) => r.tipo_dia === 'domingo',
     },
-  ],
+  ] as FilterConfig[],
   byAttribute: [
-    { key: 'directos', label: 'Directos', filter: (r) => r.directo === true },
-  ],
+    { key: 'directos', label: 'Directos', filter: (r: HorarioRecord) => r.directo === true },
+  ] as FilterConfig[],
   dynamic: {
-    byLine: (lineaNombre) => ({
+    byLine: (lineaNombre: string): FilterConfig => ({
       key: `linea-${lineaNombre}`,
       label: lineaNombre,
-      filter: (r) => r.linea_nombre === lineaNombre,
+      filter: (r: HorarioRecord) => r.linea_nombre === lineaNombre,
     }),
-    byRoute: (recorridoId, label) => ({
+    byRoute: (recorridoId: number, label: string): FilterConfig => ({
       key: `recorrido-${recorridoId}`,
       label,
-      filter: (r) => r.recorrido_id === recorridoId,
+      filter: (r: HorarioRecord) => r.recorrido_id === recorridoId,
     }),
   },
 };
 
-const useBulkSelection = (data = [], endpoint) => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+const useBulkSelection = (data: HorarioRecord[] = []): UseBulkSelectionReturn => {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
-  const handleQuickSelect = (filterType, filterValue = null, mode = 'add') => {
+  const handleQuickSelect = (filterType: FilterType, filterValue?: string | number, mode: SelectionMode = 'add'): QuickSelectResult => {
     if (!data || data.length === 0) {
       return { success: false, message: 'No hay datos para filtrar.' };
     }
 
-    let filtered = [];
+    let filtered: number[] = [];
 
     switch (filterType) {
       case 'habil':
@@ -48,7 +55,7 @@ const useBulkSelection = (data = [], endpoint) => {
         const config = FILTER_CONFIG.byDayType.find(
           (f) => f.key === filterType,
         );
-        if (config) filtered = data.filter(config.filter).map((r) => r.id);
+        if (config) filtered = data.filter(config.filter).map((r: HorarioRecord) => r.id);
         break;
       }
 
@@ -56,37 +63,38 @@ const useBulkSelection = (data = [], endpoint) => {
         const config = FILTER_CONFIG.byAttribute.find(
           (f) => f.key === 'directos',
         );
-        if (config) filtered = data.filter(config.filter).map((r) => r.id);
+        if (config) filtered = data.filter(config.filter).map((r: HorarioRecord) => r.id);
         break;
       }
 
       case 'linea': {
         if (!filterValue)
           return { success: false, message: 'Debe especificar una línea.' };
-        const config = FILTER_CONFIG.dynamic.byLine(filterValue);
-        filtered = data.filter(config.filter).map((r) => r.id);
+        const config = FILTER_CONFIG.dynamic.byLine(String(filterValue));
+        filtered = data.filter(config.filter).map((r: HorarioRecord) => r.id);
         break;
       }
 
       case 'recorrido': {
         if (!filterValue)
           return { success: false, message: 'Debe especificar un recorrido.' };
-        const record = data.find((r) => r.recorrido_id === filterValue);
+        const recorridoId = Number(filterValue);
+        const record = data.find((r: HorarioRecord) => r.recorrido_id === recorridoId);
         const label = record
           ? `${record.origen} - ${record.destino}`
           : 'Recorrido';
-        const config = FILTER_CONFIG.dynamic.byRoute(filterValue, label);
-        filtered = data.filter(config.filter).map((r) => r.id);
+        const config = FILTER_CONFIG.dynamic.byRoute(recorridoId, label);
+        filtered = data.filter(config.filter).map((r: HorarioRecord) => r.id);
         break;
       }
 
       case 'all':
-        setSelectedRowKeys(data.map((r) => r.id));
-        return { success: true, count: data.length, mode: 'replace' };
+        setSelectedRowKeys(data.map((r: HorarioRecord) => r.id));
+        return { success: true, count: data.length, mode: 'add' };
 
       case 'clear':
         setSelectedRowKeys([]);
-        return { success: true, count: 0, mode: 'replace' };
+        return { success: true, count: 0, mode: 'remove' };
 
       default:
         return {
@@ -119,16 +127,17 @@ const useBulkSelection = (data = [], endpoint) => {
     }
   };
 
-  const getUniqueLines = () => {
+  const getUniqueLines = (): string[] => {
     if (!data || data.length === 0) return [];
-    const lines = [...new Set(data.map((r) => r.linea_nombre).filter(Boolean))];
+    const lines = [...new Set(data.map((r: HorarioRecord) => r.linea_nombre).filter(Boolean))];
     return lines.sort();
   };
 
-  const getUniqueRoutes = () => {
+  const getUniqueRoutes = (): { key: number; label: string }[] => {
     if (!data || data.length === 0) return [];
-    const routesMap = new Map();
-    data.forEach((r) => {
+    const routesMap = new Map<number, { key: number; label: string }>();
+
+    data.forEach((r: HorarioRecord) => {
       if (r.recorrido_id && r.origen && r.destino) {
         routesMap.set(r.recorrido_id, {
           key: r.recorrido_id,
@@ -147,7 +156,7 @@ const useBulkSelection = (data = [], endpoint) => {
     handleQuickSelect,
     getUniqueLines,
     getUniqueRoutes,
-    clearSelection: () => setSelectedRowKeys([]),
+    ClearSelection: () => setSelectedRowKeys([]),
     hasSelection: selectedRowKeys.length > 0,
     selectedCount: selectedRowKeys.length,
   };
