@@ -1,7 +1,8 @@
-import { DeleteResult, OperationResult, Paginationconfig } from "../api";
+import { ConexionesParams, DeleteResult, HorariosDirectosParams, OperationResult, Paginationconfig } from "../api";
+import { Conexion, HorarioDirecto } from "../models";
 
 // Tipos de filtros disponibles
-export type FilterType = 'habil' | 'sabado' | 'domingo' | 'directos' | 'linea' | 'recorrido' | 'all' | 'clear';
+export type FilterType = 'habil' | 'sabado' | 'domingo' | 'directos' | 'linea' | 'recorrido' | 'all' | 'clear' | 'clearAll';
 export type SelectionMode = 'add' | 'remove';
 
 // Estructura de un registro de horario
@@ -93,21 +94,21 @@ export interface UseModalReturn {
 }
 
 //  Retorno del hook useCrud
-export interface UseCrudReturn {
+export interface UseCrudReturn<T = any> {
   loading: boolean
   error: string | null
-  getAll: () => Promise<any[]>
-  getById: (id: number) => Promise<any>
-  create: (newData: any) => Promise<any>
-  update: (id: number, updatedData: any) => Promise<any>
-  remove: (id: number, force?: boolean) => Promise<any>
-  bulkRemove: (ids: number[]) => Promise<any>
+  getAll: () => Promise<T[]>
+  getById: (id: number) => Promise<T>
+  create: (newData: Partial<T>) => Promise<T>
+  update: (id: number, updatedData: Partial<T>) => Promise<T>
+  remove: (id: number, force?: boolean) => Promise<T>
+  bulkRemove: (ids: number[]) => Promise<{ deleted_count: number }>
 }
 
 //  Retorno del hook useHorarios
 export interface UseHorariosReturn {
-  currentModal: string | null
-  modalData: any
-  openModal: (modalName: string, data?: any) => void
-  closeModal: () => void
+  loading: boolean;
+  error: string | null;
+  getHorariosDirectos: (params: HorariosDirectosParams) => Promise<HorarioDirecto[]>;
+  getConexiones: (params: ConexionesParams) => Promise<Conexion[]>;
 }

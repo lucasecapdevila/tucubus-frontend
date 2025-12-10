@@ -1,7 +1,8 @@
 import { useContext } from "react";
 import { ModalContext } from "../../contexts";
+import { UseModalReturn } from "@/types";
 
-const useModal = () => {
+const useModal = (): UseModalReturn => {
   const context = useContext(ModalContext);
 
   if (!context) {

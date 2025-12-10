@@ -1,16 +1,17 @@
 import { useState } from "react";
 import api from "../services/api";
+import { Conexion, ConexionesParams, HorarioDirecto, HorariosDirectosParams, UseHorariosReturn } from "@/types";
 
-export const useHorarios = () => {
+export const useHorarios = (): UseHorariosReturn => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const getHorariosDirectos = async ({
     origen,
     destino,
     tipo_dia,
     hora_actual,
-  }) => {
+  }: HorariosDirectosParams): Promise<HorarioDirecto[]> => {
     try {
       setLoading(true);
       setError(null);
@@ -25,7 +26,7 @@ export const useHorarios = () => {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage =
         error.response?.data?.detail || "Error al buscar horarios";
       setError(errorMessage);
@@ -37,7 +38,7 @@ export const useHorarios = () => {
     }
   };
 
-  const getConexiones = async ({ origen, destino, tipo_dia, hora_actual }) => {
+  const getConexiones = async ({ origen, destino, tipo_dia, hora_actual }: ConexionesParams): Promise<Conexion[]> => {
     try {
       setLoading(true);
       setError(null);
@@ -52,7 +53,7 @@ export const useHorarios = () => {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage =
         error.response?.data?.detail || "Error al buscar conexiones";
       setError(errorMessage);
