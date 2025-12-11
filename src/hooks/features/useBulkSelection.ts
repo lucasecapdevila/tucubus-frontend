@@ -156,7 +156,7 @@ const useBulkSelection = (data: HorarioRecord[] = []): UseBulkSelectionReturn =>
     handleQuickSelect,
     getUniqueLines,
     getUniqueRoutes,
-    ClearSelection: () => setSelectedRowKeys([]),
+    clearSelection: () => setSelectedRowKeys([]),
     hasSelection: selectedRowKeys.length > 0,
     selectedCount: selectedRowKeys.length,
   };

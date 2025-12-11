@@ -1,5 +1,6 @@
 import React from "react";
 import { ApiEndpoint, Conexion, ConflictData, HorarioDirecto } from "../models";
+import type { FilterType } from "../hooks";
 
 //  Configuración de columna de tabla
 export interface TableColumn {
@@ -19,11 +20,11 @@ export interface FormField {
   label: string;
   type?: "text" | "select" | "switch" | "time";
   options?: { label: string; value: any }[];
-  rules?: { 
+  rules?: {
     required?: boolean;
     minLength?: number;
     maxLength?: number;
-  }[];
+  };
 }
 
 //  Props para AdminTable
@@ -57,7 +58,7 @@ export interface FilterModeSelectorProps {
 export interface QuickFiltersProps {
   uniqueLines: string[];
   uniqueRoutes: { key: number; label: string }[];
-  onQuickSelect: (type: string, value?: any, mode?: string) => void;
+  onQuickSelect: (type: FilterType | string, value?: any, mode?: string) => any;
 }
 
 //  Props de FilterButton

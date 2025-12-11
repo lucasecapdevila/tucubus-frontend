@@ -24,11 +24,11 @@ import {
   BulkActionBar,
   QuickFilters,
 } from '../features/admin/BulkActions';
-import { FormField } from '../common/FormField';
 
 import toast from 'react-hot-toast';
 import CascadeDeleteModal from '../common/CascadeDeleteModal';
 import { AdminTableProps, CascadeModalData } from '@/types';
+import { FormField } from '../common/FormField';
 
 const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formFields }) => {
   const [open, setOpen] = useState(false);
@@ -65,7 +65,7 @@ const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formF
     getUniqueRoutes,
     clearSelection,
     selectedCount,
-  } = useBulkSelection(data, endpoint);
+  } = useBulkSelection(data);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -111,7 +111,7 @@ const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formF
       setCascadeModal({
         id,
         entityType,
-        ...result.conflictData,
+        ...result.conflict_data,
       });
     } else if (result.success) {
       clearSelection();
@@ -127,10 +127,13 @@ const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formF
   };
 
   const tableColumns = [
-    ...columns,
+    ...columns.map(col => ({
+      ...col,
+      align: col.align as 'left' | 'right' | 'center' | undefined
+    })),
     {
       title: 'Acciones',
-      align: 'center',
+      align: 'center' as const,
       render: (_: any, record: any) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
@@ -196,7 +199,7 @@ const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formF
           <QuickFilters
             uniqueLines={getUniqueLines()}
             uniqueRoutes={getUniqueRoutes()}
-            onQuickSelect={handleQuickSelect}
+            onQuickSelect={handleQuickSelect as any}
           />
         </>
       )}

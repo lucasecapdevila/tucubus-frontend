@@ -1,9 +1,10 @@
 import { Controller } from 'react-hook-form';
 import { Input, Select, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
+import { FormFieldProps } from '@/types';
 
-const FormField = ({ field, control }) => {
-  const renderField = (inputField) => {
+const FormField: React.FC<FormFieldProps> = ({ field, control }) => {
+  const renderField = (inputField: any) => {
     switch (field.type) {
       case 'select':
         return (

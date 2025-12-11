@@ -44,7 +44,7 @@ export interface UseBulkSelectionReturn {
   handleQuickSelect: (filterType: FilterType, filterValue?: string | number, mode?: SelectionMode) => QuickSelectResult
   getUniqueLines: () => string[]
   getUniqueRoutes: () => { key: number; label: string }[]
-  ClearSelection: () => void
+  clearSelection: () => void
   hasSelection: boolean
   selectedCount: number
 }

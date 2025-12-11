@@ -12,7 +12,7 @@ import {
 import { useHorarios } from "../../hooks/useHorarios";
 import { calculateTripDuration, formatDuration } from "../../utils/validation";
 import toast from "react-hot-toast";
-import { HorarioDirecto, ProcessedConexion, ProcessedHorario, ResultadosHorariosProps } from "@/types";
+import { HorarioDirecto, ProcessedConexion, ProcessedHorario, ResultadosHorariosProps, TipoDia } from "@/types";
 
 const ResultadosHorarios: React.FC<ResultadosHorariosProps> = ({ searchData }) => {
   const [resultados, setResultados] = useState<ProcessedHorario[]>([]); // Horarios directos
@@ -50,8 +50,8 @@ const ResultadosHorarios: React.FC<ResultadosHorariosProps> = ({ searchData }) =
       const { origin, destiny, day, option, time } = searchData;
 
       // ⬅️ CORRECCIÓN para el error 422: Estandarización a literales del Backend
-      const diasMap = { 'Hábil': 'habil', 'Sábado': 'sábado', 'Domingo': 'domingo' };
-      const tipo_dia_normalizado = diasMap[day] || '';
+      const diasMap: { [key: string]: string } = { 'Hábil': 'habil', 'Sábado': 'sábado', 'Domingo': 'domingo' };
+      const tipo_dia_normalizado = (diasMap[day] || '') as TipoDia;
 
       
       // Lógica para determinar hora_actual

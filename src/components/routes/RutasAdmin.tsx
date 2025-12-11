@@ -1,10 +1,10 @@
 import { Route, Routes } from "react-router-dom"
 import { Admin } from "../pages"
 
-const RutasAdmin = () => {
+const RutasAdmin: React.FC = () => {
   return (
     <Routes>
-      <Route exact path="/" element={<Admin />} />
+      <Route path="/" element={<Admin />} />
     </Routes>
   )
 }
