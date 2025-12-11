@@ -1,12 +1,12 @@
 //  Validación para formularios del Admin Panel
 
-export const timeToMinutes = (time) => {
+export const timeToMinutes = (time: string): number => {
   if (!time) return 0;
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
-export const calculateTripDuration = (horaSalida, horaLlegada) => {
+export const calculateTripDuration = (horaSalida: string, horaLlegada: string): number => {
   let salidaMin = timeToMinutes(horaSalida);
   let llegadaMin = timeToMinutes(horaLlegada);
 
@@ -17,7 +17,12 @@ export const calculateTripDuration = (horaSalida, horaLlegada) => {
   return llegadaMin - salidaMin;
 };
 
-export const validateHorarioTimes = (horaSalida, horaLlegada) => {
+interface ValidationResult {
+  valid: boolean;
+  message?: string;
+}
+
+export const validateHorarioTimes = (horaSalida: string, horaLlegada: string): ValidationResult => {
   if (!horaSalida || !horaLlegada) {
     return { valid: false, message: "Ambas horas son requeridas" };
   }
@@ -46,7 +51,7 @@ export const validateHorarioTimes = (horaSalida, horaLlegada) => {
   };
 };
 
-export const validateRecorrido = (origen, destino) => {
+export const validateRecorrido = (origen: string, destino: string): ValidationResult => {
   if (!origen || !destino) {
     return { valid: false, message: "Origen y destino son requeridos" };
   }
@@ -58,7 +63,7 @@ export const validateRecorrido = (origen, destino) => {
   return { valid: true };
 };
 
-export const validateLineaNombre = (nombre) => {
+export const validateLineaNombre = (nombre: string): ValidationResult => {
   if (!nombre || nombre.trim().length < 2) {
     return {
       valid: false,
@@ -77,7 +82,7 @@ export const validateLineaNombre = (nombre) => {
 };
 
 // Valida username
-export const validateUsername = (username) => {
+export const validateUsername = (username: string): ValidationResult => {
   if (!username || username.length < 3) {
     return {
       valid: false,
@@ -104,7 +109,7 @@ export const validateUsername = (username) => {
 };
 
 // Valida formato de hora HH:mm
-export const validateTimeFormat = (time) => {
+export const validateTimeFormat = (time: string): ValidationResult => {
   if (!time) return { valid: false, message: "La hora es requerida" };
 
   const timeRegex = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
@@ -120,7 +125,7 @@ export const validateTimeFormat = (time) => {
 };
 
 // Formatea duración en minutos a formato legible
-export const formatDuration = (minutes) => {
+export const formatDuration = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
 
@@ -130,6 +135,6 @@ export const formatDuration = (minutes) => {
 };
 
 // Detecta si un viaje cruza medianoche
-export const crossesMidnight = (horaSalida, horaLlegada) => {
+export const crossesMidnight = (horaSalida: string, horaLlegada: string): boolean => {
   return timeToMinutes(horaLlegada) < timeToMinutes(horaSalida);
 };

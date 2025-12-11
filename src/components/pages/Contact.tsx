@@ -10,9 +10,15 @@ import toast from "react-hot-toast";
 
 const { TextArea } = Input;
 
-const Contact = () => {
+interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
+const Contact: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<ContactFormData>();
 
   // Función simulada para manejar el envío del formulario
   const onFinish = () => {

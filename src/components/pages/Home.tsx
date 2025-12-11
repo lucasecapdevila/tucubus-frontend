@@ -6,15 +6,20 @@ import { FadeLoader } from "react-spinners";
 import dayjs from "dayjs";
 import ResultadosHorarios from "../home/ResultadosHorarios";
 import toast from "react-hot-toast";
+import { Recorrido, SearchFormData } from "@/types";
 
-const Home = () => {
+interface SearchData extends SearchFormData {
+  day: string;
+}
+
+const Home: React.FC = () => {
   const [day, setDay] = useState("Hábil");
-  const [searchData, setSearchData] = useState(null);
-  const [ciudades, setCiudades] = useState([]);
+  const [searchData, setSearchData] = useState<SearchData | null>(null);
+  const [ciudades, setCiudades] = useState<string[]>([]);
   const [loadingCiudades, setLoadingCiudades] = useState(true);
 
   // Métodos CRUD
-  const { getAll } = useCrud("recorridos");
+  const { getAll } = useCrud<Recorrido>("recorridos");
 
   useEffect(() => {
     cargarCiudades();
@@ -26,7 +31,7 @@ const Home = () => {
       const recorridos = await getAll();
 
       // Extraer ciudades únicas de orígenes y destinos
-      const ciudadesSet = new Set();
+      const ciudadesSet = new Set<string>();
       recorridos.forEach((recorrido) => {
         if (recorrido.origen) ciudadesSet.add(recorrido.origen);
         if (recorrido.destino) ciudadesSet.add(recorrido.destino);
@@ -48,18 +53,18 @@ const Home = () => {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm({
+  } = useForm<SearchFormData>({
     defaultValues: {
       origin: "",
       destiny: "",
       option: "",
-      time: null,
+      time: undefined,
     },
   });
 
   const option = watch("option");
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: SearchFormData) => {
     if (data.option === "llegar-a-la" || data.option === "ultimo-disponible") {
       toast.error(
         `La búsqueda por '${

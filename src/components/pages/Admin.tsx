@@ -1,20 +1,26 @@
 import { useState, useEffect } from "react";
 import { FadeLoader } from "react-spinners";
-import { Tabs } from "antd";
+import { Tabs, TabsProps } from "antd";
 import { useCrud } from "../../hooks/useCrud";
-import { rolesOptions, tipoDiaOptions } from "../../utils/adminPanelOptions";
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import toast from "react-hot-toast";
 import { AdminTable } from "../admin";
+import { Linea, Recorrido } from "@/types";
+import { rolesOptions, tipoDiaOptions } from "@/utils/adminPanelOptions";
 
-const Admin = () => {
-  const [lineasOptions, setLineasOptions] = useState([]);
-  const [recorridosOptions, setRecorridosOptions] = useState([]);
+interface SelectOption {
+  label: string;
+  value: any;
+}
+
+const Admin: React.FC = () => {
+  const [lineasOptions, setLineasOptions] = useState<SelectOption[]>([]);
+  const [recorridosOptions, setRecorridosOptions] = useState<SelectOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("lineas");
 
-  const { getAll: getAllLineas } = useCrud('lineas');
-  const { getAll: getAllRecorridos } = useCrud('recorridos');
+  const { getAll: getAllLineas } = useCrud<Linea>('lineas');
+  const { getAll: getAllRecorridos } = useCrud<Recorrido>('recorridos');
 
   // Cargar opciones de líneas
   const loadLineasOptions = async () => {
@@ -59,7 +65,7 @@ const Admin = () => {
   }, []);
 
   // Recargar opciones cuando cambia de tab
-  const handleTabChange = async (key) => {
+  const handleTabChange = async (key: string) => {
     setActiveTab(key);
     
     // Si va a "Recorridos", recargar líneas por si se creó una nueva
@@ -73,7 +79,7 @@ const Admin = () => {
     }
   };
 
-  const items = [
+  const items: TabsProps["items"] = [
     {
       key: "lineas",
       label: "Lineas",
@@ -86,7 +92,7 @@ const Admin = () => {
             { title: "Nombre", dataIndex: "nombre", sorter: (a, b) => a.nombre.localeCompare(b.nombre), showSorterTooltip: false },
           ]}
           formFields={[
-            { name: "nombre", label: "Nombre", rules: { required: true } },
+            { name: "nombre", label: "Nombre", rules: [{ required: true }] },
           ]}
         />
       )
@@ -105,9 +111,9 @@ const Admin = () => {
             { title: "Linea", dataIndex: "linea_nombre", render: (val) => val || '-', sorter: (a, b) => a.linea_nombre.localeCompare(b.linea_nombre), showSorterTooltip: false },
           ]}
           formFields={[
-            { name: "origen", label: "Origen", rules: { required: true } },
-            { name: "destino", label: "Destino", rules: { required: true } },
-            { name: "linea_id", label: "Linea", type: "select", options: lineasOptions, rules: { required: true } },
+            { name: "origen", label: "Origen", rules: [{ required: true }] },
+            { name: "destino", label: "Destino", rules: [{ required: true }] },
+            { name: "linea_id", label: "Linea", type: "select", options: lineasOptions, rules: [{ required: true }] },
           ]}
         />
       )
@@ -130,10 +136,10 @@ const Admin = () => {
             { title: "Directo", dataIndex: "directo", render: (val) => val ? <CheckOutlined style={{ color: 'green' }} /> : <CloseOutlined style={{ color: 'red' }} />, sorter: (a, b) => a.directo - b.directo, showSorterTooltip: false },
           ]}
           formFields={[
-            { name: "tipo_dia", label: "Tipo de día", type: "select", options: tipoDiaOptions, rules: { required: true } },
-            { name: "hora_salida", label: "Hora de salida", type: "time", rules: { required: true } },
-            { name: "hora_llegada", label: "Hora de llegada", type: "time", rules: { required: true } },
-            { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: { required: true } },
+            { name: "tipo_dia", label: "Tipo de día", type: "select", options: tipoDiaOptions, rules: [{ required: true }] },
+            { name: "hora_salida", label: "Hora de salida", type: "time", rules: [{ required: true }] },
+            { name: "hora_llegada", label: "Hora de llegada", type: "time", rules: [{ required: true }] },
+            { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: [{ required: true }] },
             { name: "directo", label: "Directo", type: "switch" },
           ]}
         />
@@ -152,8 +158,8 @@ const Admin = () => {
             { title: "Rol", dataIndex: "role", sorter: (a, b) => a.role.localeCompare(b.role), showSorterTooltip: false },
           ]}
           formFields={[
-            { name: "username", label: "Nombre de usuario", rules: { required: true } },
-            { name: "role", label: "Rol", type: "select", options: rolesOptions, rules: { required: true } },
+            { name: "username", label: "Nombre de usuario", rules: [{ required: true }] },
+            { name: "role", label: "Rol", type: "select", options: rolesOptions, rules: [{ required: true }] },
           ]}
         />
       )
@@ -166,7 +172,7 @@ const Admin = () => {
       {isLoading ? (
         // CAMBIO: Usar FadeLoader en lugar de texto
         <div className="w-full flex justify-center items-center py-12">
-          <FadeLoader color="#0c5392" loading={isLoading} size={50} />
+          <FadeLoader color="#0c5392" loading={isLoading} />
         </div>
       ) : (
         <div className="w-full">

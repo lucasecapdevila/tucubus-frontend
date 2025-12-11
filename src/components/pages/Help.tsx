@@ -1,7 +1,7 @@
 import { Divider, Button } from "antd";
 import { Link } from "react-router-dom";
 
-const Help = () => {
+const Help: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
       <div className="help-container bg-white p-6 sm:p-8 rounded-xl shadow-xl">

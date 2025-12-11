@@ -1,18 +1,22 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// Importar la nueva función de registro
 import { login, registerUser } from "../../services/auth"; 
 
-const Login = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+interface LoginFormData {
+  username: string;
+  password: string;
+}
+
+const Login: React.FC = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   // Nuevo estado para alternar entre Login y Register
   const [isRegisterMode, setIsRegisterMode] = useState(false); 
   const navigate = useNavigate();
 
-  const handleAuth = async (data) => {
+  const handleAuth = async (data: LoginFormData) => {
     setLoading(true);
     setError("");
     
@@ -25,7 +29,7 @@ const Login = () => {
     setLoading(false);
 
     // 3. Manejar el resultado (Es el mismo para login y register exitosos)
-    if (result.success) {
+    if (result.success && result.data) {
       sessionStorage.setItem("usuarioTucuBus", JSON.stringify(result.data));
       if (result.data.role === "Administrador") {
         navigate("/admin");
@@ -71,7 +75,7 @@ const Login = () => {
               {...register("password", { 
                   required: "Contraseña requerida",
                   // Requisito mínimo de longitud solo para el registro
-                  minLength: isRegisterMode ? { value: 6, message: "Mínimo 6 caracteres" } : {}
+                  minLength: isRegisterMode ? { value: 6, message: "Mínimo 6 caracteres" } : undefined
               })}
               autoComplete={isRegisterMode ? "new-password" : "current-password"}
             />

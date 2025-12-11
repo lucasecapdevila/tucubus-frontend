@@ -124,7 +124,7 @@ export interface ModalData {
   onConfirm?: () => void;
 }
 
-export interface SearchData {
+export interface SearchFormData {
   origin: string;
   destiny: string;
   day: string;
@@ -133,7 +133,7 @@ export interface SearchData {
 }
 
 export interface ResultadosHorariosProps {
-  searchData: SearchData | null;
+  searchData: SearchFormData | null;
 }
 
 export interface ProcessedHorario extends HorarioDirecto {
