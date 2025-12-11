@@ -1,9 +1,10 @@
 import { Alert, Button, Divider, Modal, Typography } from "antd";
 import { ArrowRightOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { CascadeDeleteModalProps } from "@/types";
 
 const { Text, Paragraph } = Typography;
 
-const CascadeDeleteModal = ({ data, onConfirm, onCancel }) => {
+const CascadeDeleteModal: React.FC<CascadeDeleteModalProps> = ({ data, onConfirm, onCancel }) => {
   const entityType = data?.entityType || "linea";
   const isLinea = entityType === 'linea';
 
@@ -48,7 +49,7 @@ const CascadeDeleteModal = ({ data, onConfirm, onCancel }) => {
         />
 
         {/* Recorridos afectados */}
-        {isLinea && data?.recorridos?.length > 0 && (
+        {isLinea && (data?.recorridos?.length ?? 0) > 0 && (
           <>
             <Divider />
 
@@ -68,7 +69,7 @@ const CascadeDeleteModal = ({ data, onConfirm, onCancel }) => {
         )}
 
         {/* Preview horarios */}
-        {!isLinea && data?.horarios_preview?.length > 0 && (
+        {!isLinea && (data?.horarios_preview?.length ?? 0) > 0 && (
           <>
             <Divider />
 

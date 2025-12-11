@@ -1,6 +1,7 @@
+import { ActiveFiltersProps } from "@/types"
 import { Button, Space, Tag } from "antd"
 
-const ActiveFilters = ({ activeFilters, onRemoveFilter }) => {
+const ActiveFilters: React.FC<ActiveFiltersProps> = ({ activeFilters, onRemoveFilter }) => {
   if(activeFilters.length === 0) return null
 
   return (

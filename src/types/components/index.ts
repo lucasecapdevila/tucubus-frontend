@@ -1,5 +1,5 @@
 import React from "react";
-import { ApiEndpoint, ConflictData } from "../models";
+import { ApiEndpoint, Conexion, ConflictData, HorarioDirecto } from "../models";
 
 //  Configuración de columna de tabla
 export interface TableColumn {
@@ -57,14 +57,32 @@ export interface FilterModeSelectorProps {
 export interface QuickFiltersProps {
   uniqueLines: string[];
   uniqueRoutes: { key: number; label: string }[];
-  onQuickSelect: (type: string, value?: any) => void;
+  onQuickSelect: (type: string, value?: any, mode?: string) => void;
 }
 
 //  Props de FilterButton
 export interface FilterButtonProps {
   label: string;
   onClick: () => void;
-  size?: "small" | "medium" | "large";
+  isActive?: boolean;
+  size?: "small" | "middle" | "large";
+}
+
+export interface ActiveFilter {
+  key: string;
+  type: string;
+  value: string | number;
+  label: string;
+}
+
+export interface ActiveFiltersProps {
+  activeFilters: Array<{
+    key: string;
+    type: string;
+    value: string | number;
+    label: string;
+  }>;
+  onRemoveFilter: (key: string) => void;
 }
 
 //  Props de FormField
@@ -76,11 +94,24 @@ export interface FormFieldProps {
 //  Props de CascadeDeleteModal
 export interface CascadeDeleteModalProps {
   data: {
-    conflictData: ConflictData;
     entityType: "linea" | "recorrido";
-  }
+    id?: number;
+    recorridos_count?: number;
+    horarios_count?: number;
+    recorridos?: any[];
+    horarios_preview?: number[];
+  };
   onConfirm: () => void;
   onCancel: () => void;
+}
+
+export interface CascadeModalData {
+  id: number;
+  entityType: 'linea' | 'recorrido';
+  recorridos_count?: number;
+  horarios_count?: number;
+  recorridos?: any[];
+  horarios_preview?: number[];
 }
 
 //  Props de ModalManager
@@ -91,4 +122,25 @@ export interface ModalData {
   title?: string;
   children?: React.ReactNode;
   onConfirm?: () => void;
+}
+
+export interface SearchData {
+  origin: string;
+  destiny: string;
+  day: string;
+  option: string;
+  time?: string;
+}
+
+export interface ResultadosHorariosProps {
+  searchData: SearchData | null;
+}
+
+export interface ProcessedHorario extends HorarioDirecto {
+  duracion: number;
+  key: number;
+}
+
+export interface ProcessedConexion extends Conexion {
+  key: number;
 }

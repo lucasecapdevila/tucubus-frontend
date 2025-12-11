@@ -12,6 +12,7 @@ import {
   Popconfirm,
   Table,
   Alert,
+  TableProps,
 } from 'antd';
 import {
   DeleteOutlined,
@@ -27,12 +28,13 @@ import { FormField } from '../common/FormField';
 
 import toast from 'react-hot-toast';
 import CascadeDeleteModal from '../common/CascadeDeleteModal';
+import { AdminTableProps, CascadeModalData } from '@/types';
 
-const AdminTable = ({ title, endpoint, columns, formFields }) => {
+const AdminTable: React.FC<AdminTableProps> = ({ title, endpoint, columns, formFields }) => {
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState<any>(null);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [cascadeModal, setCascadeModal] = useState(null);
+  const [cascadeModal, setCascadeModal] = useState<CascadeModalData | null>(null);
 
   const {
     data,
@@ -67,7 +69,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
-  const handleOpen = async (record = null) => {
+  const handleOpen = async (record: any = null) => {
     if (record) {
       setEditing(record);
       formFields.forEach((field) => {
@@ -81,12 +83,12 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     setOpen(true);
   };
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: any) => {
     // Validar antes de enviar
     const validation = validateBeforeSubmit();
 
     if (!validation.valid) {
-      toast.error(validation.message);
+      toast.error(validation.message || 'Error de validación');
       return;
     }
 
@@ -101,7 +103,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     }
   };
 
-  const handleDeleteClick = async (id) => {
+  const handleDeleteClick = async (id: number) => {
     const result = await handleDelete(id, false);
 
     if (result.conflict) {
@@ -129,7 +131,7 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     {
       title: 'Acciones',
       align: 'center',
-      render: (_, record) => (
+      render: (_: any, record: any) => (
         <>
           <Button type="link" onClick={() => handleOpen(record)}>
             <EditOutlined style={{ color: '#0c5392', fontSize: '16px' }} />
@@ -159,12 +161,12 @@ const AdminTable = ({ title, endpoint, columns, formFields }) => {
     },
   ];
 
-  const rowSelection =
+  const rowSelection: TableProps<any>['rowSelection'] =
     endpoint === 'horarios'
       ? {
           selectedRowKeys,
-          onChange: (newSelectedRowKeys) => {
-            setSelectedRowKeys(newSelectedRowKeys);
+          onChange: (newSelectedRowKeys: React.Key[]) => {
+            setSelectedRowKeys(newSelectedRowKeys as number[]);
           },
           selections: [
             Table.SELECTION_ALL,

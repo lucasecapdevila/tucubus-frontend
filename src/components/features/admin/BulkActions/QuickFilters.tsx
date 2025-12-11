@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Button, Space, Divider } from 'antd';
 import FilterButton from './FilterButton';
 import ActiveFilters from './ActiveFilters';
+import { ActiveFilter, QuickFiltersProps } from '@/types';
 
-const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
-  const [activeFilters, setActiveFilters] = useState([])
+const QuickFilters: React.FC<QuickFiltersProps> = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([])
 
-  const handleFilterClick = (type, value) => {
-    let newFilters
+  const handleFilterClick = (type: string, value: string | number) => {
+    let newFilters: ActiveFilter[]
     const filterKey = `${type}-${value}`
     const existingFilter = activeFilters.find(f => f.key === filterKey)
 
@@ -22,7 +23,9 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
       else if(type === 'linea') label = `Linea: ${value}`
       else if(type === 'recorrido'){
         const route = uniqueRoutes.find(r => r.key === value)
-        label = route ? `Ruta: ${route.label}` : value
+        label = route ? `Ruta: ${route.label}` : String(value)
+      } else {
+        label = String(value)
       }
 
       newFilters = [...activeFilters, { key: filterKey, type, value, label }]
@@ -32,7 +35,7 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
     setActiveFilters(newFilters)
   }
 
-  const handleRemoveFilter = (filterKey) => {
+  const handleRemoveFilter = (filterKey: string) => {
     if(filterKey === 'all'){
       setActiveFilters([])
       onQuickSelect('clearAll')
@@ -45,7 +48,7 @@ const QuickFilters = ({ uniqueLines, uniqueRoutes, onQuickSelect }) => {
     }
   }
 
-  const isFilterActive = (type, value) => {
+  const isFilterActive = (type: string, value: string | number): boolean => {
     const filterKey = `${type}-${value}`
     return activeFilters.some(f => f.key === filterKey)
   }

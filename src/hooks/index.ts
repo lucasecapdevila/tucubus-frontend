@@ -1,2 +1,2 @@
-export { useCrud } from './useCrud';
-export { useHorarios } from './useHorarios';
+export { useCrud } from '@/hooks/useCrud'
+export { useHorarios } from '@/hooks/useHorarios'

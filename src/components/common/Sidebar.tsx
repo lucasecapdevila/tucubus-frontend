@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
-import { Menu, Popconfirm } from "antd";
+import { Menu, MenuProps, Popconfirm } from "antd";
 import logo from "../../assets/img/logo.webp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { User } from "@/types";
 
-const Sidebar = () => {
+type MenuItem = Required<MenuProps>['items'][number]
+
+const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedKey, setSelectedKey] = useState("1");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Leer usuario al montar/cambiar
   useEffect(() => {
@@ -19,8 +22,8 @@ const Sidebar = () => {
   }, [location]); // Dependencia location por si logueo en otra ruta
 
   // Mapeo de rutas a keys del menú
-  const getSelectedKey = () => {
-    switch (location.pathname) {
+  const getSelectedKey = (pathname: string): string => {
+    switch (pathname) {
       case "/":
         return "1";
       case "/ayuda":
@@ -41,14 +44,14 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   // Items principales - siempre aparecen
-  const mainItems = [
+  const mainItems: MenuItem[] = [
     { key: "1", label: <NavLink to="/">Inicio</NavLink> },
     { key: "2", label: <NavLink to="/ayuda">Ayuda</NavLink> },
     { key: "3", label: <NavLink to="/contacto">Contacto</NavLink> },
   ];
 
   // Admin extra - Solo si corresponde
-  let adminItem = [];
+  let adminItem: MenuItem[] = [];
   if (user?.role === "Administrador") {
     adminItem = [{ key: "5", label: <NavLink to="/admin">Admin</NavLink> }];
   }
@@ -61,7 +64,7 @@ const Sidebar = () => {
     setOpen(false);
   };
 
-  const loginLogoutItem = user
+  const loginLogoutItem: MenuItem[] = user
     ? [
         {
           key: "4",
@@ -80,10 +83,10 @@ const Sidebar = () => {
     : [{ key: "4", label: <NavLink to="/login">Ingresar</NavLink> }];
 
   // Menú mobile y desktop lo usan igual, sólo cambia composición
-  const allMenuItems = [...mainItems, ...adminItem, { type: "divider" }];
+  const allMenuItems: MenuItem[] = [...mainItems, ...adminItem, { type: "divider" }];
 
   // Handler para Menu para cerrar Drawer (solo mobile)
-  const handleMenuClick = ({ key }) => {
+  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     setSelectedKey(key);
     // Cerrar sólo si estamos en mobile/Drawer abierto
     if (open) {

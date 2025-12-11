@@ -12,10 +12,11 @@ import {
 import { useHorarios } from "../../hooks/useHorarios";
 import { calculateTripDuration, formatDuration } from "../../utils/validation";
 import toast from "react-hot-toast";
+import { HorarioDirecto, ProcessedConexion, ProcessedHorario, ResultadosHorariosProps } from "@/types";
 
-const ResultadosHorarios = ({ searchData }) => {
-  const [resultados, setResultados] = useState([]); // Horarios directos
-  const [conexiones, setConexiones] = useState([]); // Horarios con conexión
+const ResultadosHorarios: React.FC<ResultadosHorariosProps> = ({ searchData }) => {
+  const [resultados, setResultados] = useState<ProcessedHorario[]>([]); // Horarios directos
+  const [conexiones, setConexiones] = useState<ProcessedConexion[]>([]); // Horarios con conexión
   const [loadingSearch, setLoadingSearch] = useState(false); // Loader local para el componente
   
   // Importamos getConexiones (ahora optimizado)
@@ -25,7 +26,7 @@ const ResultadosHorarios = ({ searchData }) => {
   const loading = loadingSearch || loadingHook; // Usamos un loading combinado
 
   // Función para estandarizar y ordenar horarios
-  const procesarHorarios = (data) => {
+  const procesarHorarios = (data: HorarioDirecto[]): ProcessedHorario[] => {
     let procesados = data.map(horario => ({
       ...horario,
       duracion: calculateTripDuration(horario.hora_salida, horario.hora_llegada),
@@ -35,12 +36,12 @@ const ResultadosHorarios = ({ searchData }) => {
     // Ordenar por hora de salida (por defecto, o para 'Salir ahora', 'Salir a la(s)')
     procesados = procesados.sort((a, b) => a.hora_salida.localeCompare(b.hora_salida));
 
-    // Si tu lógica de 'ultimo-disponible' necesita orden inverso, iría aquí.
-
     return procesados;
   };
   
   const buscarHorarios = async () => {
+    if(!searchData) return;
+
     setLoadingSearch(true);
     setResultados([]);
     setConexiones([]);
@@ -73,7 +74,7 @@ const ResultadosHorarios = ({ searchData }) => {
           tipo_dia: tipo_dia_normalizado,
           hora_actual: hora_actual,
         });
-        setResultados(procesarHorarios(directos, option));
+        setResultados(procesarHorarios(directos));
         if (directos.length > 0) {
           toast.success(`Se encontraron ${directos.length} viajes directos.`);
         }
@@ -123,7 +124,7 @@ const ResultadosHorarios = ({ searchData }) => {
 
 
   // --- Renderizado de Horarios Directos ---
-  const renderDesktopItem = (item) => (
+  const renderDesktopItem = (item: ProcessedHorario) => (
     <List.Item>
       <Card 
         className="w-full hover:shadow-lg transition-shadow border-0"
@@ -169,7 +170,7 @@ const ResultadosHorarios = ({ searchData }) => {
     </List.Item>
   );
 
-  const renderMobileItem = (item) => (
+  const renderMobileItem = (item: ProcessedHorario) => (
     <List.Item>
       <Card className="w-full" bordered={true} size="small">
         <div className="space-y-2">
@@ -205,7 +206,7 @@ const ResultadosHorarios = ({ searchData }) => {
   );
 
   // --- Renderizado de Conexiones ---
-  const renderConexionItem = (item) => (
+  const renderConexionItem = (item: ProcessedConexion) => (
     <List.Item>
         <Card 
             className="w-full border-dashed border-2 border-gray-300 bg-gray-50 hover:shadow-lg transition-shadow"
@@ -229,7 +230,7 @@ const ResultadosHorarios = ({ searchData }) => {
                     <div className="border-l pl-3">
                         <p className="font-semibold text-sm">Tramo 1 ({item.linea_a_nombre || '-'})</p>
                         <p className="text-xs text-gray-600">
-                            {searchData.origin} → {item.ciudad_conexion}
+                            {searchData?.origin} → {item.ciudad_conexion}
                         </p>
                         <p className="text-xs text-gray-600">
                             Salida: {item.tramo_a_salida} | Llegada: {item.tramo_a_llegada}
@@ -245,7 +246,7 @@ const ResultadosHorarios = ({ searchData }) => {
                             <NodeIndexOutlined /> Espera en {item.ciudad_conexion}: {formatDuration(item.tiempo_espera_min)}
                         </p>
                         <p className="text-xs text-gray-600">
-                            {item.ciudad_conexion} → {searchData.destiny}
+                            {item.ciudad_conexion} → {searchData?.destiny}
                         </p>
                         <p className="text-xs text-gray-600">
                             Salida: {item.tramo_b_salida} | Llegada: {item.tramo_b_llegada}

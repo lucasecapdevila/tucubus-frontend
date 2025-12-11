@@ -1,6 +1,7 @@
+import { FilterButtonProps } from '@/types';
 import { Button } from 'antd';
 
-const FilterButton = ({ label, onClick, isActive, size = 'small' }) => {
+const FilterButton: React.FC<FilterButtonProps> = ({ label, onClick, isActive, size = 'small' }) => {
   return (
     <Button
       size={size}

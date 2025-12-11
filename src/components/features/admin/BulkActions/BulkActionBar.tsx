@@ -1,6 +1,7 @@
+import { BulkActionBarProps } from '@/types';
 import { Alert, Button, Tag } from 'antd';
 
-const BulkActionBar = ({ selectedCount, onBulkDelete, onClearSelection }) => {
+const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onBulkDelete, onClearSelection }) => {
   if (selectedCount === 0) return null;
 
   return (
