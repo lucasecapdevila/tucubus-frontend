@@ -1,81 +1,118 @@
-//  Tipo de endpoint API
-export type ApiEndpoint = 'recorridos' | 'lineas' | 'horarios' | 'users';
+// Enums
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  OPERATOR = 'OPERATOR',
+  DRIVER = 'DRIVER',
+  USER = 'USER',
+}
 
-//  Usuario del sistema
+export enum UserState {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PENDING = 'PENDING',
+}
+
+export enum DayOfWeek {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY',
+}
+
+export enum LocationType {
+  COUNTRY = 'COUNTRY',
+  STATE = 'STATE',
+  CITY = 'CITY',
+  DISTRICT = 'DISTRICT',
+  NEIGHBORHOOD = 'NEIGHBORHOOD',
+}
+
+// Entities
 export interface User {
-  id: number;
-  username: string;
-  role: 'Administrador' | 'Usuario';
-  token?: string;
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  state: UserState;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Company {
+  id: string;
+  name: string;
+  description?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  locationId?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Route {
+  id: string;
+  name: string;
+  companyId: string;
+  stopIds: string[];
+  description?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Schedule {
+  id: string;
+  routeId: string;
+  departureTime: string;
+  arrivalTime: string;
+  daysOfWeek: DayOfWeek[];
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Stop {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  locationId?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface Location {
+  id: string;
+  name: string;
+  type: LocationType;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface JWTPayload {
-  sub: string;
-  role: string;
-  exp?: number;
-  iat?: number;
+// DTOs
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+export interface RegisterDto {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+}
+export interface AuthResponseDto {
+  access_token: string;
+  user: User;
 }
 
-//  Línea de transporte
-export interface Linea {
-  id: number;
-  nombre: string;
-}
-
-//  Recorrido entre dos ciudades
-export interface Recorrido {
-  id: number;
-  origen: string;
-  destino: string;
-  linea_id: number;
-  linea_nombre?: string;
-  recorrido_label?: string;
-}
-
-//  Tipo de día para horarios
-export type TipoDia = 'habil' | 'sábado' | 'domingo';
-
-//  Horario de viaje
-export interface Horario {
-  id: number;
-  tipo_dia: TipoDia;
-  hora_salida: string;
-  hora_llegada: string;
-  recorrido_id: number;
-  directo: boolean;
-  // Campos relacionales (joins)
-  origen?: string;
-  destino?: string;
-  linea_nombre?: string;
-  recorrido_label?: string;
-}
-
-//  Resultado de búsqueda de horarios directos
-export interface HorarioDirecto extends Horario {
-  duracion?: number;
-}
-
-//  Conexión entre dos horarios
-export interface Conexion {
-  // Tramo A (origen → ciudad intermedia)
-  tramo_a_salida: string;
-  tramo_a_llegada: string;
-  linea_a_nombre: string;
-  
-  // Tramo B (ciudad intermedia → destino)
-  tramo_b_salida: string;
-  tramo_b_llegada: string;
-  linea_b_nombre: string;
-  
-  // Información de conexión
-  ciudad_conexion: string;
-  tiempo_espera_min: number;
-}
-
-//  Datos de conflicto al eliminar (cascada)
-export interface ConflictData {
-  recorridos_count?: number;
-  horarios_count: number;
-  recorridos?: Recorrido[];
-  horarios_preview?: number[];
-}
+// Responses
+export type UserResponseDto = User;
+export type RouteResponseDto = Route;
+export type ScheduleResponseDto = Schedule;
+export type CompanyResponseDto = Company;
+export type StopResponseDto = Stop;

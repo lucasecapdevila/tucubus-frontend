@@ -1,19 +1,19 @@
-import { User } from "@/types";
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_LOCALHOST,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 //  Interceptor para agregar token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const userStr = sessionStorage.getItem("usuarioTucuBus");
-    if(userStr){
-      const user: User = JSON.parse(userStr);
-      if (user?.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
+    const token = sessionStorage.getItem("token");
+    if(token){
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

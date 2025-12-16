@@ -7,7 +7,7 @@ export interface LoginCredentials {
 }
 
 //  Respuesta de autenticación
-export interface AuthResponse {
+export interface AuthServiceResponse {
   success: boolean;
   data?: User;
   error?: string;
