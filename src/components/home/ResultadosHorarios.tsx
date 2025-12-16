@@ -9,7 +9,7 @@ import {
   NodeIndexOutlined, // Icono para Conexión
   LineOutlined // Icono para tramo directo
 } from "@ant-design/icons";
-import { useHorarios } from "../../hooks/useHorarios";
+import { useHorarios } from "../../hooks/useSchedules";
 import { calculateTripDuration, formatDuration } from "../../utils/validation";
 import toast from "react-hot-toast";
 import { HorarioDirecto, ProcessedConexion, ProcessedHorario, ResultadosHorariosProps, TipoDia } from "@/types";

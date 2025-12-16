@@ -1,21 +1,18 @@
 //  Validación para formularios del Admin Panel
 
-export const timeToMinutes = (time: string): number => {
-  if (!time) return 0;
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
+export const calculateDuration = (startTime: string, endTime: string): number => {
+  const [startHour, startMin] = startTime.split(":").map(Number);
+  const [endHour, endMin] = endTime.split(":").map(Number);
+  return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+}
 
-export const calculateTripDuration = (horaSalida: string, horaLlegada: string): number => {
-  let salidaMin = timeToMinutes(horaSalida);
-  let llegadaMin = timeToMinutes(horaLlegada);
-
-  if (llegadaMin < salidaMin) {
-    llegadaMin += 24 * 60;
-  }
-
-  return llegadaMin - salidaMin;
-};
+export const addMinutes = (time: string, minutes: number): string => {
+  const [hour, min] = time.split(":").map(Number);
+  const totalMinutes = hour * 60 + min + minutes;
+  const newHour = Math.floor(totalMinutes / 60) % 24;
+  const newMin = totalMinutes % 60;
+  return `${String(newHour).padStart(2, "0")}:${String(newMin).padStart(2, "0")}`;
+}
 
 interface ValidationResult {
   valid: boolean;
@@ -27,7 +24,7 @@ export const validateHorarioTimes = (horaSalida: string, horaLlegada: string): V
     return { valid: false, message: "Ambas horas son requeridas" };
   }
 
-  const duracion = calculateTripDuration(horaSalida, horaLlegada);
+  const duracion = calculateDuration(horaSalida, horaLlegada);
 
   if (duracion < 5) {
     return {
@@ -136,5 +133,5 @@ export const formatDuration = (minutes: number): string => {
 
 // Detecta si un viaje cruza medianoche
 export const crossesMidnight = (horaSalida: string, horaLlegada: string): boolean => {
-  return timeToMinutes(horaLlegada) < timeToMinutes(horaSalida);
+  return addMinutes(horaLlegada) < addMinutes(horaSalida);
 };
