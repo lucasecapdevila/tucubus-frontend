@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, registerUser } from "../../services/auth"; 
-import { LoginDto, RegisterDto, UserRole } from "@/types";
+import { UserRole } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoginFormData {
   email: string;
@@ -15,11 +15,43 @@ interface RegisterFormData extends LoginFormData {
 }
 
 const Login: React.FC = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<RegisterFormData>();
+  const { register: registerForm, handleSubmit, formState: { errors }, reset } = useForm<RegisterFormData>();
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false); 
   const navigate = useNavigate();
+
+  const { login, register, loading, user } = useAuth();
+
+  const handleAuth = async (data: RegisterFormData) => {
+    setError("");
+
+    try{
+      let result;
+
+      if(isRegisterMode) {
+        result = await register(data.name, data.email, data.password, data.phone);
+      } else {
+        result = await login(data.email, data.password);
+      }
+
+      if(result.success) {
+        setTimeout(() => {
+          const userRole = user?.role;
+          if(userRole) {
+            redirectByRole(userRole);
+          } else {
+            const storedUser = JSON.parse(sessionStorage.getItem("user") || "{}");
+            redirectByRole(storedUser.role);
+          }
+        }, 100);
+      } else {
+        setError(result.error || "Error en la autenticación.");
+      }
+    } catch(err) {
+      console.error("Error en la autenticación:", err);
+      setError("Error inesperado. Por favor, intenta nuevamente.");
+    }
+  }
 
   const redirectByRole = (role: UserRole) => {
     switch (role) {
@@ -39,52 +71,6 @@ const Login: React.FC = () => {
     setIsRegisterMode(prev => !prev);
     setError("");
     reset(); // Limpiar campos del formulario
-  };
-
-  const handleAuth = async (data: RegisterFormData) => {
-    setLoading(true);
-    setError("");
-
-    try{
-      if(isRegisterMode) {
-        const registerData: RegisterDto = {
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          phone: data.phone,
-        }
-        
-        const result = await registerUser(registerData);
-
-        if(result.success && result.data) {
-          sessionStorage.setItem("user", JSON.stringify(result.data));
-
-          redirectByRole(result.data.role);
-        } else {
-          setError(result.error || "Error al registrar el usuario");
-        }
-      } else {
-        const loginData: LoginDto = {
-          email: data.email,
-          password: data.password,
-        }
-
-        const result = await login(loginData);
-
-        if(result.success && result.data) {
-          sessionStorage.setItem("user", JSON.stringify(result.data));
-
-          redirectByRole(result.data.role);
-        } else {
-          setError(result.error || "Error al iniciar sesión");
-        }
-      }
-    } catch (err: any) {
-      console.error("Error al autenticar:", err);
-      setError("Error inesperado. Por favor, intenta nuevamente.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -107,7 +93,7 @@ const Login: React.FC = () => {
                 type="text"
                 className="border rounded-lg py-2 px-3"
                 placeholder="Juan Pérez"
-                {...register("name", { 
+                {...registerForm("name", { 
                   required: isRegisterMode ? "Nombre obligatorio." : false 
                 })}
                 autoComplete="name"
@@ -127,7 +113,7 @@ const Login: React.FC = () => {
               type="email"
               className="border rounded-lg py-2 px-3"
               placeholder="ejemplo@correo.com"
-              {...register("email", { 
+              {...registerForm("email", { 
                 required: "El correo electrónico es obligatorio.",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -151,7 +137,7 @@ const Login: React.FC = () => {
                 id="phone"
                 type="tel"
                 className="border rounded-lg py-2 px-3"
-                {...register("phone")}
+                {...registerForm("phone")}
                 autoComplete="tel"
               />
               {errors.phone && (
@@ -169,7 +155,7 @@ const Login: React.FC = () => {
               id="password"
               type="password"
               className="border rounded-lg py-2 px-3"
-              {...register("password", {
+              {...registerForm("password", {
                 required: "Contraseña obligatoria.",
                 minLength: {
                   value: 6,

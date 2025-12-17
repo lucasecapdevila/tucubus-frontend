@@ -4,7 +4,7 @@ import logo from "../../assets/img/logo.webp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { User } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -13,15 +13,9 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedKey, setSelectedKey] = useState("1");
-  const [user, setUser] = useState<User | null>(null);
 
-  // Leer usuario al montar/cambiar
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem("usuarioTucuBus");
-    setUser(storedUser ? JSON.parse(storedUser) : null);
-  }, [location]); // Dependencia location por si logueo en otra ruta
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
 
-  // Mapeo de rutas a keys del menú
   const getSelectedKey = (pathname: string): string => {
     switch (pathname) {
       case "/":
@@ -50,21 +44,18 @@ const Sidebar: React.FC = () => {
     { key: "3", label: <NavLink to="/contacto">Contacto</NavLink> },
   ];
 
-  // Admin extra - Solo si corresponde
   let adminItem: MenuItem[] = [];
-  if (user?.role === "Administrador") {
+  if (isAdmin()) {
     adminItem = [{ key: "5", label: <NavLink to="/admin">Admin</NavLink> }];
   }
 
-  // Último item - login o logout según estado
   const handleLogout = () => {
-    sessionStorage.removeItem("usuarioTucuBus");
-    setUser(null);
+    logout();
     navigate("/");
     setOpen(false);
   };
 
-  const loginLogoutItem: MenuItem[] = user
+  const loginLogoutItem: MenuItem[] = isAuthenticated
     ? [
         {
           key: "4",
@@ -75,7 +66,7 @@ const Sidebar: React.FC = () => {
               cancelText="No"
               onConfirm={handleLogout}
             >
-              <span style={{ cursor: "pointer" }}>Cerrar sesión</span>
+              <span style={{ cursor: "pointer" }}>Cerrar sesión {user?.name && `(${user.name})`}</span>
             </Popconfirm>
           ),
         },
@@ -88,7 +79,6 @@ const Sidebar: React.FC = () => {
   // Handler para Menu para cerrar Drawer (solo mobile)
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     setSelectedKey(key);
-    // Cerrar sólo si estamos en mobile/Drawer abierto
     if (open) {
       setOpen(false);
     }
