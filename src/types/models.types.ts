@@ -252,6 +252,7 @@ export interface RouteFilters {
 export interface ScheduleFilters {
   routeId?: string;
   day?: DayOfWeek;
+  stopId?: string;
   isActive?: boolean;
 }
 

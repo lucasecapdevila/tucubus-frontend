@@ -1,6 +1,6 @@
 import React from "react";
-import { Conexion, ConflictData, HorarioDirecto } from "../models";
-import type { FilterType } from "../hooks";
+import type { FilterType } from "./hooks.types";
+import type { ApiEndpoint, ConflictData } from "./api.types";
 
 //  Configuración de columna de tabla
 export interface TableColumn {
@@ -106,30 +106,10 @@ export interface CascadeDeleteModalProps {
   onCancel: () => void;
 }
 
-export interface CascadeModalData {
-  id: number;
-  entityType: 'linea' | 'recorrido';
-  recorridos_count?: number;
-  horarios_count?: number;
-  recorridos?: any[];
-  horarios_preview?: number[];
-}
-
 //  Props de ModalManager
-export interface ModalData {
-  conflictData?: ConflictData;
-  entityType?: "linea" | "recorrido";
-  count?: number;
+export interface ModalManagerProps {
   title?: string;
   children?: React.ReactNode;
   onConfirm?: () => void;
-}
-
-export interface ProcessedHorario extends HorarioDirecto {
-  duracion: number;
-  key: number;
-}
-
-export interface ProcessedConexion extends Conexion {
-  key: number;
+  onCancel?: () => void;
 }

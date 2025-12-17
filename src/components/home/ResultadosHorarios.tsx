@@ -17,7 +17,7 @@ import {
   ScheduleWithRoute,
   SearchData,
 } from '@/types';
-import { DayOfWeek, Stop } from '@/types/models';
+import { DayOfWeek, Stop } from '@/types/models/models.types';
 import { useSchedules } from '@/hooks/useSchedules';
 import api from '@/services/api';
 

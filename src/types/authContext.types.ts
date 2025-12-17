@@ -1,4 +1,4 @@
-import { User, UserRole } from "./models";
+import { User, UserRole } from "./models.types";
 
 export interface AuthContextType {
   // Estado

@@ -1,17 +1,12 @@
-import { DeleteResult, OperationResult, Paginationconfig } from "../api";
-import { DayOfWeek, Route, Schedule, Stop } from "../models";
+import { DeleteResult, OperationResult, Paginationconfig } from "./api.types";
+import { DayOfWeek, Route, Schedule, Stop, ScheduleFilters } from "./models.types";
 
 // Tipos de filtros disponibles
 export type FilterType = 'habil' | 'sabado' | 'domingo' | 'directos' | 'linea' | 'recorrido' | 'all' | 'clear' | 'clearAll';
 export type SelectionMode = 'add' | 'remove';
 
-// Estructura de un registro de horario
-// Tipos para el hook
-export interface ScheduleFilters {
-  routeId?: string;
-  day?: DayOfWeek;
-  stopId?: string;
-}
+// Re-export ScheduleFilters desde models.types para consistencia
+export type { ScheduleFilters };
 
 export interface DirectScheduleParams {
   originStopId: string;

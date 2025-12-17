@@ -1,4 +1,4 @@
-import { ScheduleWithRoute } from "./hooks";
+import { ScheduleWithRoute } from "./hooks.types";
 
 export interface SearchFormData {
   origin: string;
