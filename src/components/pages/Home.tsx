@@ -6,45 +6,35 @@ import { FadeLoader } from "react-spinners";
 import dayjs from "dayjs";
 import ResultadosHorarios from "../home/ResultadosHorarios";
 import toast from "react-hot-toast";
-import { Recorrido, SearchFormData } from "@/types";
-
-interface SearchData extends SearchFormData {
-  day: string;
-}
+import { SearchData, SearchFormData } from "@/types";
+import { Stop } from "@/types/models";
+import api from "@/services/api";
 
 const Home: React.FC = () => {
   const [day, setDay] = useState("Hábil");
   const [searchData, setSearchData] = useState<SearchData | null>(null);
-  const [ciudades, setCiudades] = useState<string[]>([]);
-  const [loadingCiudades, setLoadingCiudades] = useState(true);
-
-  // Métodos CRUD
-  const { getAll } = useCrud<Recorrido>("recorridos");
+  const [stops, setStops] = useState<Stop[]>([]);
+  const [loadingStops, setLoadingStops] = useState(true);
 
   useEffect(() => {
-    cargarCiudades();
+    cargarParadas();
   }, []);
 
-  const cargarCiudades = async () => {
+  const cargarParadas = async () => {
     try {
-      setLoadingCiudades(true);
-      const recorridos = await getAll();
+      setLoadingStops(true);
+      const response = await api.get<Stop[]>("/stops");
 
-      // Extraer ciudades únicas de orígenes y destinos
-      const ciudadesSet = new Set<string>();
-      recorridos.forEach((recorrido) => {
-        if (recorrido.origen) ciudadesSet.add(recorrido.origen);
-        if (recorrido.destino) ciudadesSet.add(recorrido.destino);
-      });
+      const paradasActivas = response.data
+        .filter((stop) => stop.isActive)
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-      // Convertir Set a array y ordenar alfabéticamente
-      const ciudadesArray = Array.from(ciudadesSet).sort();
-      setCiudades(ciudadesArray);
+      setStops(paradasActivas);
     } catch (error) {
-      console.error("Error al cargar ciudades:", error);
-      toast.error("Error al cargar las ciudades disponibles");
+      console.error("Error al cargar paradas:", error);
+      toast.error("Error al cargar las paradas disponibles");
     } finally {
-      setLoadingCiudades(false);
+      setLoadingStops(false);
     }
   };
 
@@ -89,9 +79,9 @@ const Home: React.FC = () => {
         </p>
       </div>
 
-      {loadingCiudades ? (
+      {loadingStops ? (
         <div className="w-full flex justify-center items-center py-12">
-          <FadeLoader color="#0c5392" loading={loadingCiudades} />
+          <FadeLoader color="#0c5392" loading={loadingStops} />
         </div>
       ) : (
         <>
@@ -136,10 +126,10 @@ const Home: React.FC = () => {
                 >
                   <Select
                     {...field}
-                    placeholder="Seleccione ciudad"
-                    options={ciudades.map((city) => ({
-                      label: city,
-                      value: city,
+                    placeholder="Seleccione parada"
+                    options={stops.map((stop) => ({
+                      label: stop.name,
+                      value: stop.id,
                     }))}
                     showSearch
                     filterOption={(input, option) =>
@@ -171,10 +161,10 @@ const Home: React.FC = () => {
                 >
                   <Select
                     {...field}
-                    placeholder="Seleccione ciudad"
-                    options={ciudades.map((city) => ({
-                      label: city,
-                      value: city,
+                    placeholder="Seleccione parada"
+                    options={stops.map((stop) => ({
+                      label: stop.name,
+                      value: stop.id,
                     }))}
                     showSearch
                     filterOption={(input, option) =>

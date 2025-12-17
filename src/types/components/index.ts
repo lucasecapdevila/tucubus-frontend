@@ -1,5 +1,5 @@
 import React from "react";
-import { ApiEndpoint, Conexion, ConflictData, HorarioDirecto } from "../models";
+import { Conexion, ConflictData, HorarioDirecto } from "../models";
 import type { FilterType } from "../hooks";
 
 //  Configuración de columna de tabla
@@ -123,18 +123,6 @@ export interface ModalData {
   title?: string;
   children?: React.ReactNode;
   onConfirm?: () => void;
-}
-
-export interface SearchFormData {
-  origin: string;
-  destiny: string;
-  day: string;
-  option: string;
-  time?: string;
-}
-
-export interface ResultadosHorariosProps {
-  searchData: SearchFormData | null;
 }
 
 export interface ProcessedHorario extends HorarioDirecto {
