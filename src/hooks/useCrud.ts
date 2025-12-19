@@ -24,7 +24,7 @@ export const useCrud = <T = any>(endpoint: ApiEndpoint): UseCrudReturn<T> => {
 
   //  GET - Obtener un registro por ID
   const getById = useCallback(
-    async (id: number): Promise<T> => {
+    async (id: string | number): Promise<T> => {
       try {
         setLoading(true);
         setError(null);
@@ -80,7 +80,7 @@ export const useCrud = <T = any>(endpoint: ApiEndpoint): UseCrudReturn<T> => {
   );
 
   const remove = useCallback(
-    async (id: number, force: boolean = false): Promise<T> => {
+    async (id: string | number, force: boolean = false): Promise<T> => {
       try {
         setLoading(true);
         setError(null);
@@ -103,7 +103,7 @@ export const useCrud = <T = any>(endpoint: ApiEndpoint): UseCrudReturn<T> => {
   );
 
   const bulkRemove = useCallback(
-    async (ids: number[]): Promise<{ deleted_count: number }> => {
+    async (ids: (string | number)[]): Promise<{ deleted_count: number }> => {
       try {
         setLoading(true);
         setError(null);

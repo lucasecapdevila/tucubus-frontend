@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserRole } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,53 +17,47 @@ interface RegisterFormData extends LoginFormData {
 const Login: React.FC = () => {
   const { register: registerForm, handleSubmit, formState: { errors }, reset } = useForm<RegisterFormData>();
   const [error, setError] = useState("");
-  const [isRegisterMode, setIsRegisterMode] = useState(false); 
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [authSucceeded, setAuthSucceeded] = useState(false);
   const navigate = useNavigate();
 
   const { login, register, loading, user } = useAuth();
 
+  // Redirigir cuando el usuario se autentica exitosamente
+  useEffect(() => {
+    if (authSucceeded && user) {
+      switch (user.role) {
+        case UserRole.ADMIN:
+        case UserRole.OPERATOR:
+          navigate("/admin");
+          break;
+        case UserRole.DRIVER:
+        case UserRole.USER:
+        default:
+          navigate("/");
+          break;
+      }
+    }
+  }, [authSucceeded, user, navigate]);
+
   const handleAuth = async (data: RegisterFormData) => {
     setError("");
 
-    try{
-      let result;
+    try {
+      const result = isRegisterMode
+        ? await register(data.name, data.email, data.password, data.phone)
+        : await login(data.email, data.password);
 
-      if(isRegisterMode) {
-        result = await register(data.name, data.email, data.password, data.phone);
-      } else {
-        result = await login(data.email, data.password);
-      }
-
-      if(result.success) {
-        setTimeout(() => {
-          const userRole = user?.role;
-          if(userRole) {
-            redirectByRole(userRole);
-          } else {
-            const storedUser = JSON.parse(sessionStorage.getItem("user") || "{}");
-            redirectByRole(storedUser.role);
-          }
-        }, 100);
-      } else {
+      if (!result.success) {
         setError(result.error || "Error en la autenticación.");
+        return;
       }
-    } catch(err) {
+
+      setAuthSucceeded(true);
+
+    } catch (err) {
       console.error("Error en la autenticación:", err);
       setError("Error inesperado. Por favor, intenta nuevamente.");
-    }
-  }
-
-  const redirectByRole = (role: UserRole) => {
-    switch (role) {
-      case UserRole.ADMIN:
-      case UserRole.OPERATOR:
-        navigate("/admin");
-        break;
-      case UserRole.DRIVER:
-      case UserRole.USER:
-      default:
-        navigate("/");
-        break;
     }
   };
 

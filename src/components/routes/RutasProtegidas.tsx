@@ -22,7 +22,7 @@ const RutasProtegidas: React.FC<RutasProtegidasProps> = ({
     )
   }
 
-  if(isAuthenticated) {
+  if(!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

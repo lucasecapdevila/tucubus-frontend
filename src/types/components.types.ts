@@ -1,38 +1,34 @@
 import React from "react";
 import type { FilterType } from "./hooks.types";
-import type { ApiEndpoint, ConflictData } from "./api.types";
 
 //  Configuración de columna de tabla
-export interface TableColumn {
+export interface AdminTableColumn {
   title: string;
-  dataIndex?: string;
-  key?: string;
-  width?: number;
-  align?: "left" | "right" | "center";
+  dataIndex: string | string[];
   render?: (value: any, record: any) => React.ReactNode;
-  sorter?: (a: any, b: any) => number;
+  sorter?: ((a: any, b: any) => number) | boolean;
   showSorterTooltip?: boolean;
+  align?: 'left' | 'right' | 'center';
+}
+
+export interface AdminTableProps {
+  title: string;
+  endpoint: string;
+  columns: AdminTableColumn[];
+  formFields: FormFieldConfig[];
 }
 
 //  Configuración de campo de formulario
 export interface FormField {
   name: string;
   label: string;
-  type?: "text" | "select" | "switch" | "time";
+  type?: "text" | "select" | "multiselect" | "switch" | "time" | "number" | "email" | "textarea";
   options?: { label: string; value: any }[];
   rules?: {
     required?: boolean;
     minLength?: number;
     maxLength?: number;
   };
-}
-
-//  Props para AdminTable
-export interface AdminTableProps {
-  title: string;
-  endpoint: ApiEndpoint;
-  columns: TableColumn[];
-  formFields: FormField[];
 }
 
 //  Props para AdminTable Header
@@ -86,10 +82,29 @@ export interface ActiveFiltersProps {
   onRemoveFilter: (key: string) => void;
 }
 
-//  Props de FormField
+export interface FormFieldConfig {
+  name: string;
+  label: string;
+  type?: 'text' | 'select' | 'multiselect' | 'switch' | 'time' | 'number' | 'email' | 'textarea';
+  options?: SelectOption[];
+  rules?: {
+    required?: boolean;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: RegExp;
+    [key: string]: any;
+  };
+  placeholder?: string;
+}
+
 export interface FormFieldProps {
-  field: FormField;
-  control: any;
+  field: FormFieldConfig;
+  control: any; // Control de react-hook-form
+}
+
+export interface SelectOption {
+  label: string;
+  value: any;
 }
 
 //  Props de CascadeDeleteModal

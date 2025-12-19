@@ -123,13 +123,13 @@ export interface UseModalReturn {
 }
 
 //  Retorno del hook useCrud
-export interface UseCrudReturn<T = any> {
-  loading: boolean
-  error: string | null
-  getAll: () => Promise<T[]>
-  getById: (id: number) => Promise<T>
-  create: (newData: Partial<T>) => Promise<T>
-  update: (id: number, updatedData: Partial<T>) => Promise<T>
-  remove: (id: number, force?: boolean) => Promise<T>
-  bulkRemove: (ids: number[]) => Promise<{ deleted_count: number }>
+export interface UseCrudReturn<T> {
+  loading: boolean;
+  error: string | null;
+  getAll: () => Promise<T[]>;
+  getById: (id: string | number) => Promise<T>;
+  create: (newData: Partial<T>) => Promise<T>;
+  update: (id: string | number, updatedData: Partial<T>) => Promise<T>;
+  remove: (id: string | number, force?: boolean) => Promise<T>;
+  bulkRemove: (ids: (string | number)[]) => Promise<{ deleted_count: number }>;
 }

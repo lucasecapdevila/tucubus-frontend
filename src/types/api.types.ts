@@ -1,7 +1,13 @@
 import { User, DayOfWeek } from "./models.types";
 
 // Type Definitions
-export type ApiEndpoint = 'users' | 'companies' | 'routes' | 'schedules' | 'stops' | 'locations' | string;
+export type ApiEndpoint = 
+  | 'companies'
+  | 'routes'
+  | 'schedules'
+  | 'stops'
+  | 'users'
+  | 'locations';   
 
 // Enums
 export enum TipoDia {

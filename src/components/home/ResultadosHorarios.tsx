@@ -13,11 +13,12 @@ import { calculateDuration, formatDuration } from '../../utils/validation';
 import toast from 'react-hot-toast';
 import {
   Connection,
+  DayOfWeek,
   ProcessedSchedule,
   ScheduleWithRoute,
   SearchData,
+  Stop,
 } from '@/types';
-import { DayOfWeek, Stop } from '@/types/models/models.types';
 import { useSchedules } from '@/hooks/useSchedules';
 import api from '@/services/api';
 
