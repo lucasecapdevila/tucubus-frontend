@@ -2,7 +2,7 @@ import { User } from "@/types";
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_LOCALHOST,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 //  Interceptor para agregar token
