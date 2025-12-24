@@ -5,8 +5,8 @@ import { useCrud } from "../../hooks/useCrud";
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import toast from "react-hot-toast";
 import { AdminTable } from "../admin";
-import { Linea, Recorrido } from "@/types";
-import { rolesOptions, tipoDiaOptions } from "@/utils/adminPanelOptions";
+import { Company, Route, Stop, DayOfWeek } from "@/types";
+import { rolesOptions, daysOfWeekOptions } from "@/utils/adminPanelOptions";
 
 interface SelectOption {
   label: string;
@@ -14,42 +14,60 @@ interface SelectOption {
 }
 
 const Admin: React.FC = () => {
-  const [lineasOptions, setLineasOptions] = useState<SelectOption[]>([]);
-  const [recorridosOptions, setRecorridosOptions] = useState<SelectOption[]>([]);
+  const [companiesOptions, setCompaniesOptions] = useState<SelectOption[]>([]);
+  const [routesOptions, setRoutesOptions] = useState<SelectOption[]>([]);
+  const [stopsOptions, setStopsOptions] = useState<SelectOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("lineas");
+  const [activeTab, setActiveTab] = useState("companies");
 
-  const { getAll: getAllLineas } = useCrud<Linea>('lineas');
-  const { getAll: getAllRecorridos } = useCrud<Recorrido>('recorridos');
+  const { getAll: getAllCompanies } = useCrud<Company>('companies');
+  const { getAll: getAllRoutes } = useCrud<Route>('routes');
+  const { getAll: getAllStops } = useCrud<Stop>('stops');
 
-  // Cargar opciones de líneas
-  const loadLineasOptions = async () => {
+  // Cargar opciones de empresas/compañías
+  const loadCompaniesOptions = async () => {
     try {
-      const lineas = await getAllLineas();
-      const lineasOpts = lineas.map(linea => ({
-        label: linea.nombre,
-        value: linea.id,
+      const companies = await getAllCompanies();
+      const companiesOpts = companies.map(company => ({
+        label: company.name,
+        value: company.id,
       }));
-      setLineasOptions(lineasOpts);
+      setCompaniesOptions(companiesOpts);
     } catch (error) {
-      console.error("Error al cargar líneas:", error);
-      toast.error('Error al cargar las opciones de líneas');
+      console.error("Error al cargar empresas:", error);
+      toast.error('Error al cargar las opciones de empresas');
     }
   };
 
-  // Cargar opciones de recorridos
-  const loadRecorridosOptions = async () => {
+  // Cargar opciones de rutas
+  const loadRoutesOptions = async () => {
     try {
-      const recorridos = await getAllRecorridos();
-      const recorridosOpts = recorridos.map(recorrido => ({
-        label: `${recorrido.origen} - ${recorrido.destino} (Línea: ${recorrido.linea_nombre})`,
-        value: recorrido.id,
+      const routes = await getAllRoutes();
+      const routesOpts = routes.map(route => ({
+        label: `${route.name} (${route.company?.name || 'Sin empresa'})`,
+        value: route.id,
       }));
-      setRecorridosOptions(recorridosOpts);
+      setRoutesOptions(routesOpts);
     } catch (error) {
-      console.error("Error al cargar recorridos:", error);
-      // CAMBIO: Usar 'message' para notificar al usuario del error
-      toast.error('Error al cargar las opciones de recorridos');
+      console.error("Error al cargar rutas:", error);
+      toast.error('Error al cargar las opciones de rutas');
+    }
+  };
+
+  // Cargar opciones de paradas
+  const loadStopsOptions = async () => {
+    try {
+      const stops = await getAllStops();
+      const stopsOpts = stops
+        .filter(stop => stop.isActive)
+        .map(stop => ({
+          label: stop.name,
+          value: stop.id,
+        }));
+      setStopsOptions(stopsOpts);
+    } catch (error) {
+      console.error("Error al cargar paradas:", error);
+      toast.error('Error al cargar las opciones de paradas');
     }
   };
 
@@ -57,7 +75,11 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
-      await Promise.all([loadLineasOptions(), loadRecorridosOptions()]);
+      await Promise.all([
+        loadCompaniesOptions(),
+        loadRoutesOptions(),
+        loadStopsOptions(),
+      ]);
       setIsLoading(false);
     };
     initialize();
@@ -68,85 +90,200 @@ const Admin: React.FC = () => {
   const handleTabChange = async (key: string) => {
     setActiveTab(key);
     
-    // Si va a "Recorridos", recargar líneas por si se creó una nueva
-    if (key === "recorridos") {
-      await loadLineasOptions();
+    // Recargar dependencias según tab
+    if (key === "routes") {
+      await loadCompaniesOptions();
+      await loadStopsOptions();
     }
     
-    // Si va a "Horarios", recargar recorridos por si se creó uno nuevo
-    if (key === "horarios") {
-      await loadRecorridosOptions();
+    if (key === "schedules") {
+      await loadRoutesOptions();
     }
   };
 
   const items: TabsProps["items"] = [
     {
-      key: "lineas",
-      label: "Lineas",
+      key: "companies",
+      label: "Empresas",
       children: (
         <AdminTable 
-          title='Lineas'
-          endpoint='lineas'
+          title='Empresas'
+          endpoint='companies'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Nombre", dataIndex: "nombre", sorter: (a, b) => a.nombre.localeCompare(b.nombre), showSorterTooltip: false },
+            { 
+              title: "Nombre", 
+              dataIndex: "name", 
+              sorter: (a: Company, b: Company) => a.name.localeCompare(b.name), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Email", 
+              dataIndex: "email", 
+              render: (val: string) => val || '-' 
+            },
+            { 
+              title: "Teléfono", 
+              dataIndex: "phone", 
+              render: (val: string) => val || '-' 
+            },
+            { 
+              title: "Activo", 
+              dataIndex: "isActive", 
+              render: (val: boolean) => val ? 
+                <CheckOutlined style={{ color: 'green' }} /> : 
+                <CloseOutlined style={{ color: 'red' }} /> 
+            },
           ]}
           formFields={[
-            { name: "nombre", label: "Nombre", rules: { required: true } },
+            { name: "name", label: "Nombre", rules: { required: true } },
+            { name: "description", label: "Descripción" },
+            { name: "email", label: "Email", type: "email" },
+            { name: "phone", label: "Teléfono" },
+            { name: "address", label: "Dirección" },
+            { name: "isActive", label: "Activo", type: "switch" },
           ]}
         />
       )
     },
     {
-      key: "recorridos",
-      label: "Recorridos",
+      key: "stops",
+      label: "Paradas",
       children: (
         <AdminTable 
-          title='Recorridos'
-          endpoint='recorridos'
+          title='Paradas'
+          endpoint='stops'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Origen", dataIndex: "origen", sorter: (a, b) => a.origen.localeCompare(b.origen), showSorterTooltip: false },
-            { title: "Destino", dataIndex: "destino", sorter: (a, b) => a.destino.localeCompare(b.destino), showSorterTooltip: false },
-            { title: "Linea", dataIndex: "linea_nombre", render: (val) => val || '-', sorter: (a, b) => a.linea_nombre.localeCompare(b.linea_nombre), showSorterTooltip: false },
+            { 
+              title: "Nombre", 
+              dataIndex: "name", 
+              sorter: (a: Stop, b: Stop) => a.name.localeCompare(b.name), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Dirección", 
+              dataIndex: "address", 
+              render: (val: string) => val || '-' 
+            },
+            { 
+              title: "Activo", 
+              dataIndex: "isActive", 
+              render: (val: boolean) => val ? 
+                <CheckOutlined style={{ color: 'green' }} /> : 
+                <CloseOutlined style={{ color: 'red' }} /> 
+            },
           ]}
           formFields={[
-            { name: "origen", label: "Origen", rules: { required: true } },
-            { name: "destino", label: "Destino", rules: { required: true } },
-            { name: "linea_id", label: "Linea", type: "select", options: lineasOptions, rules: { required: true } },
+            { name: "name", label: "Nombre", rules: { required: true } },
+            { name: "latitude", label: "Latitud", type: "number", rules: { required: true } },
+            { name: "longitude", label: "Longitud", type: "number", rules: { required: true } },
+            { name: "address", label: "Dirección" },
+            { name: "isActive", label: "Activo", type: "switch" },
           ]}
         />
       )
     },
     {
-      key: "horarios",
+      key: "routes",
+      label: "Rutas",
+      children: (
+        <AdminTable 
+          title='Rutas'
+          endpoint='routes'
+          columns={[
+            { title: "ID", dataIndex: "id" },
+            { 
+              title: "Nombre", 
+              dataIndex: "name", 
+              sorter: (a: Route, b: Route) => a.name.localeCompare(b.name), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Empresa", 
+              dataIndex: ["company", "name"], 
+              render: (val: string) => val || '-',
+              sorter: (a: Route, b: Route) => 
+                (a.company?.name || '').localeCompare(b.company?.name || ''), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Paradas", 
+              dataIndex: "stopIds", 
+              render: (val: string[]) => val?.length || 0 
+            },
+            { 
+              title: "Activo", 
+              dataIndex: "isActive", 
+              render: (val: boolean) => val ? 
+                <CheckOutlined style={{ color: 'green' }} /> : 
+                <CloseOutlined style={{ color: 'red' }} /> 
+            },
+          ]}
+          formFields={[
+            { name: "name", label: "Nombre de la ruta", rules: { required: true } },
+            { name: "companyId", label: "Empresa", type: "select", options: companiesOptions, rules: { required: true } },
+            { name: "stopIds", label: "Paradas", type: "multiselect", options: stopsOptions, rules: { required: true } },
+            { name: "description", label: "Descripción" },
+            { name: "isActive", label: "Activo", type: "switch" },
+          ]}
+        />
+      )
+    },
+    {
+      key: "schedules",
       label: "Horarios",
       children: (
         <AdminTable 
           title='Horarios'
-          endpoint='horarios'
+          endpoint='schedules'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Día", dataIndex: "tipo_dia", sorter: (a, b) => a.tipo_dia.localeCompare(b.tipo_dia), showSorterTooltip: false },
-            { title: "Salida", dataIndex: "hora_salida", sorter: (a, b) => a.hora_salida.localeCompare(b.hora_salida), showSorterTooltip: false },
-            { title: "Llegada", dataIndex: "hora_llegada", sorter: (a, b) => a.hora_llegada.localeCompare(b.hora_llegada), showSorterTooltip: false },
-            { title: "Origen", dataIndex: "origen", render: (val) => val || '-', sorter: (a, b) => (a.origen || '').localeCompare(b.origen || ''), showSorterTooltip: false },
-            { title: "Destino", dataIndex: "destino", render: (val) => val || '-', sorter: (a, b) => (a.destino || '').localeCompare(b.destino || ''), showSorterTooltip: false },
-            { title: "Línea", dataIndex: "linea_nombre", render: (val) => val || '-', sorter: (a, b) => (a.linea_nombre || '').localeCompare(b.linea_nombre || ''), showSorterTooltip: false },
-            { title: "Directo", dataIndex: "directo", render: (val) => val ? <CheckOutlined style={{ color: 'green' }} /> : <CloseOutlined style={{ color: 'red' }} />, sorter: (a, b) => a.directo - b.directo, showSorterTooltip: false },
+            { 
+              title: "Ruta", 
+              dataIndex: ["route", "name"], 
+              render: (val: string) => val || '-',
+              sorter: (a: any, b: any) => 
+                (a.route?.name || '').localeCompare(b.route?.name || ''), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Salida", 
+              dataIndex: "departureTime", 
+              sorter: (a: any, b: any) => a.departureTime.localeCompare(b.departureTime), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Llegada", 
+              dataIndex: "arrivalTime", 
+              sorter: (a: any, b: any) => a.arrivalTime.localeCompare(b.arrivalTime), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Días", 
+              dataIndex: "daysOfWeek", 
+              render: (days: DayOfWeek[]) => days?.length || 0 
+            },
+            { 
+              title: "Activo", 
+              dataIndex: "isActive", 
+              render: (val: boolean) => val ? 
+                <CheckOutlined style={{ color: 'green' }} /> : 
+                <CloseOutlined style={{ color: 'red' }} /> 
+            },
           ]}
           formFields={[
-            { name: "tipo_dia", label: "Tipo de día", type: "select", options: tipoDiaOptions, rules: { required: true } },
-            { name: "hora_salida", label: "Hora de salida", type: "time", rules: { required: true } },
-            { name: "hora_llegada", label: "Hora de llegada", type: "time", rules: { required: true } },
-            { name: "recorrido_id", label: "Recorrido", type: "select", options: recorridosOptions, rules: { required: true } },
-            { name: "directo", label: "Directo", type: "switch" },
+            { name: "routeId", label: "Ruta", type: "select", options: routesOptions, rules: { required: true } },
+            { name: "departureTime", label: "Hora de salida", type: "time", rules: { required: true } },
+            { name: "arrivalTime", label: "Hora de llegada", type: "time", rules: { required: true } },
+            { name: "daysOfWeek", label: "Días de la semana", type: "multiselect", options: daysOfWeekOptions, rules: { required: true } },
+            { name: "isActive", label: "Activo", type: "switch" },
           ]}
         />
       )
     },
     {
-      key: "usuarios",
+      key: "users",
       label: "Usuarios",
       children: (
         <AdminTable 
@@ -154,11 +291,29 @@ const Admin: React.FC = () => {
           endpoint='users'
           columns={[
             { title: "ID", dataIndex: "id" },
-            { title: "Nombre de usuario", dataIndex: "username", sorter: (a, b) => a.username.localeCompare(b.username), showSorterTooltip: false },
-            { title: "Rol", dataIndex: "role", sorter: (a, b) => a.role.localeCompare(b.role), showSorterTooltip: false },
+            { 
+              title: "Nombre", 
+              dataIndex: "name", 
+              sorter: (a: any, b: any) => a.name.localeCompare(b.name), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Email", 
+              dataIndex: "email", 
+              sorter: (a: any, b: any) => a.email.localeCompare(b.email), 
+              showSorterTooltip: false 
+            },
+            { 
+              title: "Rol", 
+              dataIndex: "role", 
+              sorter: (a: any, b: any) => a.role.localeCompare(b.role), 
+              showSorterTooltip: false 
+            },
           ]}
           formFields={[
-            { name: "username", label: "Nombre de usuario", rules: { required: true } },
+            { name: "name", label: "Nombre completo", rules: { required: true } },
+            { name: "email", label: "Email", type: "email", rules: { required: true } },
+            { name: "phone", label: "Teléfono" },
             { name: "role", label: "Rol", type: "select", options: rolesOptions, rules: { required: true } },
           ]}
         />
@@ -168,9 +323,10 @@ const Admin: React.FC = () => {
 
   return (
     <main className="w-full max-w-5xl mx-auto px-2 sm:px-6 py-8 pt-12 flex flex-col gap-4">
-      <h1 className="text-2xl sm:text-3xl font-bold text-primary-text text-center mt-2 mb-4">Panel de Administración</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-primary-text text-center mt-2 mb-4">
+        Panel de Administración
+      </h1>
       {isLoading ? (
-        // CAMBIO: Usar FadeLoader en lugar de texto
         <div className="w-full flex justify-center items-center py-12">
           <FadeLoader color="#0c5392" loading={isLoading} />
         </div>

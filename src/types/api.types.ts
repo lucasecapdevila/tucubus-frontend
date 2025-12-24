@@ -1,4 +1,20 @@
-import { Recorrido, TipoDia, User } from "../models"
+import { User, DayOfWeek } from "./models.types";
+
+// Type Definitions
+export type ApiEndpoint = 
+  | 'companies'
+  | 'routes'
+  | 'schedules'
+  | 'stops'
+  | 'users'
+  | 'locations';   
+
+// Enums
+export enum TipoDia {
+  HABIL = 'habil',
+  SABADO = 'sabado',
+  DOMINGO = 'domingo',
+}
 
 //  Credenciales de login
 export interface LoginCredentials {
@@ -7,7 +23,7 @@ export interface LoginCredentials {
 }
 
 //  Respuesta de autenticación
-export interface AuthResponse {
+export interface AuthServiceResponse {
   success: boolean;
   data?: User;
   error?: string;
@@ -52,4 +68,12 @@ export interface Paginationconfig {
   pageSize: number
   showSizeChanger: boolean
   showTotal: (total: number, range: [number, number]) => string
+}
+
+//  Datos de conflicto para eliminación en cascada
+export interface ConflictData {
+  recorridos_count?: number;
+  horarios_count?: number;
+  recorridos?: any[];
+  horarios_preview?: number[];
 }

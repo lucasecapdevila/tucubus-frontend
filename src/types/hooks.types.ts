@@ -1,19 +1,48 @@
-import { ConexionesParams, DeleteResult, HorariosDirectosParams, OperationResult, Paginationconfig } from "../api";
-import { Conexion, HorarioDirecto } from "../models";
+import { DeleteResult, OperationResult, Paginationconfig } from "./api.types";
+import { DayOfWeek, Route, Schedule, Stop, ScheduleFilters } from "./models.types";
 
 // Tipos de filtros disponibles
 export type FilterType = 'habil' | 'sabado' | 'domingo' | 'directos' | 'linea' | 'recorrido' | 'all' | 'clear' | 'clearAll';
 export type SelectionMode = 'add' | 'remove';
 
-// Estructura de un registro de horario
-export interface HorarioRecord {
-  id: number;
-  tipo_dia: 'habil' | 'sábado' | 'domingo';
-  directo: boolean;
-  linea_nombre: string;
-  recorrido_id: number;
-  origen: string;
-  destino: string;
+// Re-export ScheduleFilters desde models.types para consistencia
+export type { ScheduleFilters };
+
+export interface DirectScheduleParams {
+  originStopId: string;
+  destinationStopId: string;
+  day?: DayOfWeek;
+  currentTime?: string; // formato "HH:mm"
+}
+
+export interface ConnectionParams {
+  originStopId: string;
+  destinationStopId: string;
+  day?: DayOfWeek;
+  currentTime?: string;
+  maxWaitTime?: number; // minutos máximos de espera entre conexiones
+}
+
+export interface ScheduleWithRoute extends Schedule {
+  route?: Route;
+}
+
+export interface Connection {
+  firstLeg: ScheduleWithRoute;
+  secondLeg: ScheduleWithRoute;
+  transferStop: Stop;
+  waitTime: number; // en minutos
+  totalDuration: number; // en minutos
+}
+
+export interface UseSchedulesReturn {
+  loading: boolean;
+  error: string | null;
+  getAllSchedules: (filters?: ScheduleFilters) => Promise<Schedule[]>;
+  getSchedulesByRoute: (routeId: string) => Promise<Schedule[]>;
+  getSchedulesByDay: (day: DayOfWeek) => Promise<Schedule[]>;
+  getDirectSchedules: (params: DirectScheduleParams) => Promise<ScheduleWithRoute[]>;
+  findConnections: (params: ConnectionParams) => Promise<Connection[]>;
 }
 
 //  Retorno del hook useAdminTable
@@ -94,21 +123,13 @@ export interface UseModalReturn {
 }
 
 //  Retorno del hook useCrud
-export interface UseCrudReturn<T = any> {
-  loading: boolean
-  error: string | null
-  getAll: () => Promise<T[]>
-  getById: (id: number) => Promise<T>
-  create: (newData: Partial<T>) => Promise<T>
-  update: (id: number, updatedData: Partial<T>) => Promise<T>
-  remove: (id: number, force?: boolean) => Promise<T>
-  bulkRemove: (ids: number[]) => Promise<{ deleted_count: number }>
-}
-
-//  Retorno del hook useHorarios
-export interface UseHorariosReturn {
+export interface UseCrudReturn<T> {
   loading: boolean;
   error: string | null;
-  getHorariosDirectos: (params: HorariosDirectosParams) => Promise<HorarioDirecto[]>;
-  getConexiones: (params: ConexionesParams) => Promise<Conexion[]>;
+  getAll: () => Promise<T[]>;
+  getById: (id: string | number) => Promise<T>;
+  create: (newData: Partial<T>) => Promise<T>;
+  update: (id: string | number, updatedData: Partial<T>) => Promise<T>;
+  remove: (id: string | number, force?: boolean) => Promise<T>;
+  bulkRemove: (ids: (string | number)[]) => Promise<{ deleted_count: number }>;
 }
